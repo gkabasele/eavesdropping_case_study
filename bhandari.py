@@ -39,10 +39,8 @@ class Graph:
 
 class DisjointPath:
     
-    def __init__(self, graph,k):
-        self.graph = graph
-        self.k = k
-
+    def __init__(self):
+        pass 
 
     def distances_init(self, nodes,src):
         distances = {}
@@ -119,24 +117,65 @@ class DisjointPath:
             new_graph.remove_edge(path[i],path[i+1])
             new_graph.update_cost(path[i+1],path[i])
 
+    def add_edge_to_set(self,path,links):
+        edges = links
+        for i in range(0,len(path)-1):
+            if path[i] not in edges:
+                edges[path[i]] = {}
+            if path[i+1] not in edges:
+                edges[path[i+1]] = {}
 
-    def disjoint_path_bhandari(self,src,dst,graph):
+            if path[i+1] in edges[path[i]]:
+                edges[path[i]][path[i+1]] = False
+            elif path[i] in edges[path[i+1]]:
+                edges[path[i+1]][path[i]] = False
+            else:
+                edges[path[i]][path[i+1]] = True
+        return edges
+
+    def get_disjoint_path(self,src,dst,links,k):
+        disjoint_paths = []
+        for i in range(k):
+            path = []
+            current = src
+            while current != dst:
+                path.append(current)
+                find_succ = False
+                i = 0
+                while not find_succ:
+                    succ = links[current].keys()[i]
+                    if links[current][succ]:
+                        links[current][succ] = False
+                        find_succ = True
+                        current = succ
+                    else:
+                        i+=1
+            path.append(current)
+            disjoint_paths.append(path)
+        return disjoint_paths
+
+
+    def disjoint_path_bhandari(self,src,dst,graph,k):
+        links = {}
         path = self.get_path(src,dst,graph)
 
-        # Repeat k times
+        self.add_edge_to_set(path,links)
 
-        new_graph = copy.deepcopy(self.graph)
-        
-        self.change_edge(path,new_graph)
+        # Repeat k-1 times
+        for i in range(k-1):
+            new_graph = copy.deepcopy(graph)
+            self.change_edge(path,new_graph)
+            path2 = self.get_path(src,dst,new_graph,True)
+            self.add_edge_to_set(path2,links)
 
-        path2 = self.get_path(src,dst,new_graph,True)
+        disjoint_path = self.get_disjoint_path(src,dst,links,k)
 
-        return (path,path2)
+        return disjoint_path
 
 
 
 if __name__ =='__main__':
-
+    '''
     graph = Graph()
     graph.addNode(1)
     graph.addNode(2)
@@ -158,17 +197,27 @@ if __name__ =='__main__':
     graph.addVertex(6,7,1)
     graph.addVertex(7,8,1)
     
-    '''
-        2 ----------- 3
-      /                 \
-     /                   \
-    1 ------- 5 --------- 4 -------8
-              |          /         |
-              |         /          |
-              +------- 6 ----------7
-    '''
+    ''' 
+    graph2 = Graph()
+    graph2.addNode(1)
+    graph2.addNode(2)
+    graph2.addNode(3)
+    graph2.addNode(4)
+    graph2.addNode(5)
+    graph2.addNode(6)
 
-    disjoint = DisjointPath(graph,2)
-    (path,path2) = disjoint.disjoint_path_bhandari(1,8,graph)
-    print path
-    print path2
+    graph2.addVertex(1,2,1)
+    graph2.addVertex(1,5,2)
+    graph2.addVertex(2,3,1)
+    graph2.addVertex(2,6,2)
+    graph2.addVertex(3,4,1)
+    graph2.addVertex(3,5,1)
+    graph2.addVertex(4,6,1)
+
+
+
+    disjoint = DisjointPath()
+    #disjoint_path = disjoint.disjoint_path_bhandari(1,8,graph,2)
+    #print disjoint_path
+    disjoint_path = disjoint.disjoint_path_bhandari(1,4,graph2,2)
+    print disjoint_path
