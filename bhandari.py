@@ -36,11 +36,15 @@ class Graph:
     def neighbor(self,node):
         return self.graph[node].keys()
 
-
+    def __repr__(self):
+        s=""
+        for node in self.graph.keys():
+            s += "Node:"+ str(node) + str(self.graph[node]) + "\n"
+        return s
 class DisjointPath:
     
     def __init__(self):
-        pass 
+        self.computed_path = {} 
 
     def distances_init(self, nodes,src):
         distances = {}
@@ -154,17 +158,27 @@ class DisjointPath:
             disjoint_paths.append(path)
         return disjoint_paths
 
+    def get_first_shortest_path(self,src,dst,graph):
+        if (src,dst,graph) in self.computed_path:
+            return self.computed_path[(src,dst,graph)] 
+
 
     def disjoint_path_bhandari(self,src,dst,graph,k):
         links = {}
         path = self.get_path(src,dst,graph)
+        self.computed_path[(src,dst,graph)]=path
 
         self.add_edge_to_set(path,links)
 
-        # Repeat k-1 times
-        for i in range(k-1):
-            new_graph = copy.deepcopy(graph)
-            self.change_edge(path,new_graph)
+        new_graph = copy.deepcopy(graph)
+        self.change_edge(path,new_graph)
+        path2 = self.get_path(src,dst,new_graph,True)
+        self.add_edge_to_set(path2,links)
+
+        # Repeat k-2 times
+        for i in range(k-2):
+            new_graph = copy.deepcopy(new_graph)
+            self.change_edge(path2,new_graph)
             path2 = self.get_path(src,dst,new_graph,True)
             self.add_edge_to_set(path2,links)
 
@@ -172,52 +186,3 @@ class DisjointPath:
 
         return disjoint_path
 
-
-
-if __name__ =='__main__':
-    '''
-    graph = Graph()
-    graph.addNode(1)
-    graph.addNode(2)
-    graph.addNode(3)
-    graph.addNode(4)
-    graph.addNode(5)
-    graph.addNode(6) 
-    graph.addNode(7)
-    graph.addNode(8)
-
-    graph.addVertex(1,2,1)
-    graph.addVertex(1,5,1)
-    graph.addVertex(2,3,1)
-    graph.addVertex(3,4,1)
-    graph.addVertex(4,5,1)
-    graph.addVertex(4,6,1)
-    graph.addVertex(4,8,1)
-    graph.addVertex(5,6,1)
-    graph.addVertex(6,7,1)
-    graph.addVertex(7,8,1)
-    
-    ''' 
-    graph2 = Graph()
-    graph2.addNode(1)
-    graph2.addNode(2)
-    graph2.addNode(3)
-    graph2.addNode(4)
-    graph2.addNode(5)
-    graph2.addNode(6)
-
-    graph2.addVertex(1,2,1)
-    graph2.addVertex(1,5,2)
-    graph2.addVertex(2,3,1)
-    graph2.addVertex(2,6,2)
-    graph2.addVertex(3,4,1)
-    graph2.addVertex(3,5,1)
-    graph2.addVertex(4,6,1)
-
-
-
-    disjoint = DisjointPath()
-    #disjoint_path = disjoint.disjoint_path_bhandari(1,8,graph,2)
-    #print disjoint_path
-    disjoint_path = disjoint.disjoint_path_bhandari(1,4,graph2,2)
-    print disjoint_path
