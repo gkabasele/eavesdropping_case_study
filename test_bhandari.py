@@ -28,7 +28,7 @@ if __name__ =='__main__':
 
     paths = [[1,5,6,7,8],[1,2,3,4,8]]
 
-    res = disjoint.disjoint_path_bhandari(1,8,graph,2)
+    (res,shortest_path) = disjoint.disjoint_path_bhandari(1,8,graph,2)
     for path in paths:
         assert path in res
     
@@ -50,7 +50,7 @@ if __name__ =='__main__':
 
     paths = [[1,2,6,4],[1,5,3,4]]
 
-    res = disjoint.disjoint_path_bhandari(1,4,graph2,2)
+    (res,shortest_path) = disjoint.disjoint_path_bhandari(1,4,graph2,2)
     for path in paths: 
         assert path in res
 
@@ -72,7 +72,7 @@ if __name__ =='__main__':
     
     paths = [[1,2,5],[1,3,5],[1,4,5]]
     
-    res = disjoint.disjoint_path_bhandari(1,5,graph3,3)
+    (res,shortest_path) = disjoint.disjoint_path_bhandari(1,5,graph3,3)
     for path in paths:
         assert path in res
 

@@ -44,8 +44,7 @@ class Graph:
 class DisjointPath:
     
     def __init__(self):
-        self.computed_path = {} 
-
+        pass
     def distances_init(self, nodes,src):
         distances = {}
         for node in nodes:
@@ -105,6 +104,9 @@ class DisjointPath:
         current = dst
         traveled = 0
         while traveled <= distances[dst]:
+            #no path has been found
+            if current not in previous:
+                return []
             p = previous[current]
             if p == src:
                 path.insert(0,p)
@@ -166,7 +168,6 @@ class DisjointPath:
     def disjoint_path_bhandari(self,src,dst,graph,k):
         links = {}
         path = self.get_path(src,dst,graph)
-        self.computed_path[(src,dst,graph)]=path
 
         self.add_edge_to_set(path,links)
 
@@ -175,7 +176,6 @@ class DisjointPath:
         path2 = self.get_path(src,dst,new_graph,True)
         self.add_edge_to_set(path2,links)
 
-        # Repeat k-2 times
         for i in range(k-2):
             new_graph = copy.deepcopy(new_graph)
             self.change_edge(path2,new_graph)
@@ -184,5 +184,5 @@ class DisjointPath:
 
         disjoint_path = self.get_disjoint_path(src,dst,links,k)
 
-        return disjoint_path
+        return disjoint_path,path
 
