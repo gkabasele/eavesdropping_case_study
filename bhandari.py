@@ -29,6 +29,10 @@ class Graph:
     def update_cost(self,node1,node2):
         cost = self.graph[node1][node2]
         self.graph[node1][node2] = -cost
+
+    def increase_cost(self,node1,node2,cost):
+        self.graph[node1][node2] = cost
+
     
     def remove_edge(self,node1,node2):
         del self.graph[node1][node2]
@@ -148,7 +152,7 @@ class DisjointPath:
                 path.append(current)
                 find_succ = False
                 i = 0
-                while not find_succ:
+                while not find_succ and i < len(links[current].keys()):
                     succ = links[current].keys()[i]
                     if links[current][succ]:
                         links[current][succ] = False
@@ -156,6 +160,8 @@ class DisjointPath:
                         current = succ
                     else:
                         i+=1
+                if not find_succ:
+                    return []
             path.append(current)
             disjoint_paths.append(path)
         return disjoint_paths
@@ -181,6 +187,7 @@ class DisjointPath:
             self.change_edge(path2,new_graph)
             path2 = self.get_path(src,dst,new_graph,True)
             self.add_edge_to_set(path2,links)
+
 
         disjoint_path = self.get_disjoint_path(src,dst,links,k)
 

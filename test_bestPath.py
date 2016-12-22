@@ -4,34 +4,8 @@ from bestPath import BestPath
 from bhandari import Graph
 
 if __name__=='__main__':
-    '''
-    graph3 = Graph()
-    graph3.addNode(1)
-    graph3.addNode(2)
-    graph3.addNode(3)
-    graph3.addNode(4)
-    graph3.addNode(5)
-
-    graph3.addVertex(1,2,1)
-    graph3.addVertex(1,3,1)
-    graph3.addVertex(1,4,1)
-    graph3.addVertex(2,3,1)
-    graph3.addVertex(2,5,1)
-    graph3.addVertex(3,4,1)
-    graph3.addVertex(3,5,1)
-    graph3.addVertex(4,5,1)
-
-    path_computer = BestPath()
     
-    path_computer.n_shortest_path(1,5,graph3,3)
 
-    naive_path = path_computer.get_naive_solution()
-    bhandari_path = path_computer.get_bhandari_solution()
-
-
-
-    assert path_computer.objective_function(naive_path,graph3) == path_computer.objective_function(bhandari_path,graph3)
-    ''' 
     graph = Graph()
     graph.addNode(1)
     graph.addNode(2)
@@ -55,16 +29,13 @@ if __name__=='__main__':
 
     path_computer = BestPath()
 
-    path_computer.n_shortest_path(1,8,graph,2)
+    best_paths = [[1,2,3,4,8,],[1,5,6,7,8]]
 
-    naive_path = path_computer.get_naive_solution()
-    bhandari_path = path_computer.get_bhandari_solution()
+    paths = path_computer.n_paths(1,8,graph,2)
+    for path in paths:
+        assert path in best_paths
 
-    print path_computer.objective_function(naive_path,graph)
-    print path_computer.objective_function(bhandari_path,graph)
 
-    #assert path_computer.objective_function(naive_path,graph) < path_computer.objective_function(bhandari_path,graph) 
-    
     graph2 = Graph()
     graph2.addNode(1)
     graph2.addNode(2)
@@ -82,11 +53,63 @@ if __name__=='__main__':
     graph2.addVertex(4,6,1)
 
     path_computer = BestPath()
-    path_computer.n_shortest_path(1,4,graph2,2)
 
-    naive_path = path_computer.get_naive_solution()
-    bhandari_path = path_computer.get_bhandari_solution()
-
-    print path_computer.objective_function(naive_path,graph2)
-    print path_computer.objective_function(bhandari_path,graph2)
+    best_paths = [[1,5,3,4],[1,2,6,4]]
     
+    paths = path_computer.n_paths(1,4,graph2,2)
+    for path in paths:
+        assert path in best_paths
+
+    graph3 = Graph()
+    graph3.addNode(1)
+    graph3.addNode(2)
+    graph3.addNode(3)
+    graph3.addNode(4)
+    graph3.addNode(5)
+
+    graph3.addVertex(1,2,1)
+    graph3.addVertex(1,3,1)
+    graph3.addVertex(1,4,1)
+    graph3.addVertex(2,3,1)
+    graph3.addVertex(2,5,1)
+    graph3.addVertex(3,4,1)
+    graph3.addVertex(3,5,1)
+    graph3.addVertex(4,5,1)
+
+    path_computer = BestPath()
+
+    best_paths = [[1,2,5],[1,3,5],[1,4,5]]
+    
+    paths = path_computer.n_paths(1,5,graph3,3)
+    for path in paths:
+        assert path in best_paths
+
+
+
+    #Only two disjoint path are possible
+    graph4 = Graph()
+    graph4.addNode(1)
+    graph4.addNode(2)
+    graph4.addNode(3)
+    graph4.addNode(4)
+    graph4.addNode(5)
+    graph4.addNode(6)
+    graph4.addNode(7)
+    graph4.addNode(8)
+
+    graph4.addVertex(1,2,1)
+    graph4.addVertex(1,3,1)
+    graph4.addVertex(1,4,1)
+    graph4.addVertex(2,5,1)
+    graph4.addVertex(3,5,1)
+    graph4.addVertex(4,7,1)
+    graph4.addVertex(5,6,1)
+    graph4.addVertex(6,8,1)
+    graph4.addVertex(7,8,1)
+
+    path_computer = BestPath()
+
+    best_paths = [[1,2,5,6,8],[1,4,7,8],[1,3,5,6,8]]
+    paths = path_computer.n_paths(1,8,graph4,3)
+    for path in paths:
+        assert path in best_paths

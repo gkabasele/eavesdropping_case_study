@@ -76,3 +76,20 @@ if __name__ =='__main__':
     for path in paths:
         assert path in res
 
+
+    graph4 = Graph()
+    graph4.addNode(1)
+    graph4.addNode(2)
+    graph4.addNode(3)
+    graph4.addNode(4)
+    graph4.addNode(5)
+
+    graph4.addVertex(1,2,1)
+    graph4.addVertex(2,3,1)
+    graph4.addVertex(2,4,1)
+    graph4.addVertex(3,5,1)
+    graph4.addVertex(4,5,1)
+
+    (res,shortest_path) = disjoint.disjoint_path_bhandari(1,5,graph4,2)
+    assert res == []
+
