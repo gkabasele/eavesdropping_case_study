@@ -30,7 +30,10 @@ class BestPath:
         i = 1
         while len(paths) == 0 and i < n:
            (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n-i)
+           i+=1
 
+        if len(paths) ==0:
+            paths = [shortest_path]
         bhandari_evaluation = self.objective_function(paths,graph)
 
         other_paths = [shortest_path]
@@ -55,11 +58,11 @@ class BestPath:
         bhandari_evaluation = self.objective_function(paths,graph)
 
         other_paths = [shortest_path]
-        priority_path = self.common_vertex_shortest_path(paths,shortest_path)
+        priority_path = self.common_edges_shortest_path(paths,shortest_path,graph)
         
         for i in range(n-1):
-            # priority queue contains tuple (#common_link,path)
-            other_paths.append(heapq.heappop(priority_path)[1])
+            # priority queue contains tuple (#common_link,cost,path)
+            other_paths.append(heapq.heappop(priority_path)[2])
 
         naive_evaluation = self.objective_function(other_paths,graph)
         if naive_evaluation > bhandari_evaluation:
@@ -77,35 +80,36 @@ class BestPath:
         else:
             return self.existing_disjoint_path(disjoint,graph,paths,shortest_path,n)
             
-    def common_vertex_shortest_path(self,paths,shortest_path):
-        vertices = set()
+    def common_edges_shortest_path(self,paths,shortest_path,graph):
+        edges = set()
         priority_path = []
         for i in range(len(shortest_path)-1):
-            vertices.add((shortest_path[i],shortest_path[i+1]))
-            vertices.add((shortest_path[i+1],shortest_path[i+1]))
+            edges.add((shortest_path[i],shortest_path[i+1]))
+            edges.add((shortest_path[i+1],shortest_path[i+1]))
 
         for path in paths:
-            common_vertex = 0
+            common_edges = 0
+            path_cost = self.count_path_cost(path,graph)
             for i in range(len(path)-1):
-                if (path[i],path[i+1]) in vertices:
-                    common_vertex +=1
-            heapq.heappush(priority_path,(common_vertex,path))
+                if (path[i],path[i+1]) in edges:
+                    common_edges +=1
+            heapq.heappush(priority_path,(common_edges,path_cost,path))
 
         return priority_path
 
 
         
-    def count_common_vertex(self,paths):
-        vertices = set()
-        common_vertex = 0
+    def count_common_edges(self,paths):
+        edges = set()
+        common_edges = 0
         for path in paths:
             for i in range(0,len(path)-1):
-                if (path[i],path[i+1]) in vertices:
-                    common_vertex +=1
+                if (path[i],path[i+1]) in edges:
+                    common_edges +=1
                 else:
-                    vertices.add((path[i],path[i+1]))
-                    vertices.add((path[i+1],path[i]))
-        return common_vertex
+                    edges.add((path[i],path[i+1]))
+                    edges.add((path[i+1],path[i]))
+        return common_edges
 
     def count_path_cost(self,path,graph):
         cost = 0
@@ -123,7 +127,7 @@ class BestPath:
 
 
     def objective_function(self,paths,graph):
-        common = COMMON_VERTEX * self.count_common_vertex(paths)
+        common = COMMON_VERTEX * self.count_common_edges(paths)
         nb_path = NB_PATH * len(paths)
         cost = COST * self.longest_path_cost(paths,graph)
         return common + cost - nb_path

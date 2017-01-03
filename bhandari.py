@@ -15,7 +15,7 @@ class Graph:
         if node not in self.graph:
             self.graph[node] = {}
 
-    def addVertex(self, node1, node2, cost):
+    def addEdge(self, node1, node2, cost):
         if node1 in self.graph and node2 in self.graph:
             self.graph[node1][node2] = cost 
             self.graph[node2][node1] = cost
