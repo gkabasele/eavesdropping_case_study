@@ -109,7 +109,8 @@ if __name__=='__main__':
 
     path_computer = BestPath()
 
-    best_paths = [[1,2,5,6,8],[1,4,7,8],[1,3,5,6,8]]
+#    best_paths = [[1,2,5,6,8],[1,4,7,8],[1,3,5,6,8]]
+    best_paths = [[1,2,5,6,8],[1,4,7,8]]
     paths = path_computer.n_paths(1,8,graph4,3)
     for path in paths:
         assert path in best_paths
@@ -143,3 +144,8 @@ if __name__=='__main__':
     graph5.addEdge(7,8,1)
     graph5.addEdge(8,9,1)
     graph5.addEdge(9,10,1)
+
+    path_computer = BestPath()
+
+    best_paths = [[10,9,4],[10,1,3,4]]
+    paths = path_computer.n_paths(10,4,graph5,3)

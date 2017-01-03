@@ -2,11 +2,12 @@
 from bhandari import Graph,DisjointPath
 import copy
 import heapq
+import sys
 
 # Tweaking coefficient according to traffic?
-COST = 10
-COMMON_VERTEX = 3
-MULTIPLIER = 10
+COST = 5            #10
+COMMON_VERTEX = 7   # 3
+MULTIPLIER = 100
 NB_PATH = 6
 
 class BestPath:
@@ -32,8 +33,6 @@ class BestPath:
            (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n-i)
            i+=1
 
-        if len(paths) ==0:
-            paths = [shortest_path]
         bhandari_evaluation = self.objective_function(paths,graph)
 
         other_paths = [shortest_path]
@@ -113,6 +112,8 @@ class BestPath:
 
     def count_path_cost(self,path,graph):
         cost = 0
+        if len(path) == 0:
+            return sys.masint
         for i in range(0,len(path)-1):
             cost+= graph.cost_edge(path[i],path[i+1])
         return cost
