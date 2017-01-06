@@ -5,7 +5,6 @@ from bhandari import Graph
 
 if __name__=='__main__':
     
-
     graph = Graph()
     graph.addNode(1)
     graph.addNode(2)
@@ -114,7 +113,6 @@ if __name__=='__main__':
     paths = path_computer.n_paths(1,8,graph4,3)
     for path in paths:
         assert path in best_paths
-
     graph5 = Graph()
     graph5.addNode(1)
     graph5.addNode(2)
@@ -149,3 +147,5 @@ if __name__=='__main__':
 
     best_paths = [[10,9,4],[10,1,3,4]]
     paths = path_computer.n_paths(10,4,graph5,3)
+    paths = path_computer.n_paths(5,2,graph5,3)
+    print paths

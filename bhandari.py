@@ -73,6 +73,9 @@ class DisjointPath:
                 tmp = distances[closest] + graph.cost_edge(closest,n)
                 if tmp < distances[n]:
                     distances[n] = tmp
+                    if n in visited:
+                        visited[n] = tmp
+
                     path[n] = closest 
 
         return (path,distances)
@@ -174,11 +177,12 @@ class DisjointPath:
     def disjoint_path_bhandari(self,src,dst,graph,k):
         links = {}
         path = self.get_path(src,dst,graph)
-
-        self.add_edge_to_set(path,links)
+        links = self.add_edge_to_set(path,links)
 
         new_graph = copy.deepcopy(graph)
         self.change_edge(path,new_graph)
+
+        #print "New Graph:\n%s"%new_graph
         path2 = self.get_path(src,dst,new_graph,True)
         self.add_edge_to_set(path2,links)
 

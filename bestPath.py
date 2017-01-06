@@ -30,8 +30,8 @@ class BestPath:
         paths = []
         i = 1
         while len(paths) == 0 and i < n:
-           (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n-i)
-           i+=1
+            (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n-i)
+            i+=1
 
         bhandari_evaluation = self.objective_function(paths,graph)
 
@@ -113,7 +113,7 @@ class BestPath:
     def count_path_cost(self,path,graph):
         cost = 0
         if len(path) == 0:
-            return sys.masint
+            return sys.maxint
         for i in range(0,len(path)-1):
             cost+= graph.cost_edge(path[i],path[i+1])
         return cost
