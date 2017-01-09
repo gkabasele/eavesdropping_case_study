@@ -1,4 +1,5 @@
 #! /bin/python
+import cProfile, pstats, StringIO
 
 from bestPath import BestPath
 from bhandari import Graph
@@ -146,6 +147,13 @@ if __name__=='__main__':
     path_computer = BestPath()
 
     best_paths = [[10,9,4],[10,1,3,4]]
+    pr = cProfile.Profile()
+    pr.enable()
     paths = path_computer.n_paths(10,4,graph5,3)
-    paths = path_computer.n_paths(5,2,graph5,3)
+    pr.disable() 
+    s = StringIO.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print s.getvalue()
     print paths

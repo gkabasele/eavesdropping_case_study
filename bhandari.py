@@ -182,7 +182,6 @@ class DisjointPath:
         new_graph = copy.deepcopy(graph)
         self.change_edge(path,new_graph)
 
-        #print "New Graph:\n%s"%new_graph
         path2 = self.get_path(src,dst,new_graph,True)
         self.add_edge_to_set(path2,links)
 
@@ -190,7 +189,7 @@ class DisjointPath:
             new_graph = copy.deepcopy(new_graph)
             self.change_edge(path2,new_graph)
             path2 = self.get_path(src,dst,new_graph,True)
-            self.add_edge_to_set(path2,links)
+            links = self.add_edge_to_set(path2,links)
 
 
         disjoint_path = self.get_disjoint_path(src,dst,links,k)
