@@ -97,7 +97,6 @@ class BestPath:
         return priority_path
 
 
-        
     def count_common_edges(self,paths):
         edges = set()
         common_edges = 0
