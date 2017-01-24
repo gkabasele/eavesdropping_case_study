@@ -85,6 +85,17 @@ class Graph:
         for node in self.graph.keys():
             s += "Node:"+ str(node) + str(self.graph[node]) + "\n"
         return s
+    
+
+class MinCutComputer:
+
+    def __init__(self):
+        pass
+
+
+
+
+
 class DisjointPath:
     
     def __init__(self):

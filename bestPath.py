@@ -72,12 +72,15 @@ class BestPath:
 
     def n_paths(self,src,dst,graph,n):
         disjoint = DisjointPath() 
-        (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n)
-        #Could not find n disjoint path
-        if len(paths) == 0:
-            return self.no_existing_disjoint_path(disjoint,src,dst,graph,n)
+        if len(graph.neighbor(src)) >= n and len(graph.neighbor(dst)) >=n:
+            (paths,shortest_path) = disjoint.disjoint_path_bhandari(src,dst,graph,n)
+            #Could not find n disjoint path
+            if len(paths) == 0:
+                return self.no_existing_disjoint_path(disjoint,src,dst,graph,n)
+            else:
+                return self.existing_disjoint_path(disjoint,graph,paths,shortest_path,n)
         else:
-            return self.existing_disjoint_path(disjoint,graph,paths,shortest_path,n)
+            return self.no_existing_disjoint_path(disjoint,src,dst,graph,n)
             
     def common_edges_shortest_path(self,paths,shortest_path,graph):
         edges = set()
