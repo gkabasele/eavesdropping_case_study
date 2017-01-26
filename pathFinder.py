@@ -26,7 +26,8 @@ def get_paths(previous,src,dst):
                     del succ[n]
         path.append(current) 
         if not finished:
-            paths.append(path)
+            if path not in paths:
+                paths.append(path)
             current = src
     return paths
 
@@ -35,7 +36,8 @@ def n_paths(G,src,dst,n):
     paths = get_paths(result,src,dst)
     l = len(paths)
     if l < n:
-        min_cut = egcut(nx.Graph(G),[1],[8],list())
+        undirected = nx.Graph(G)
+        min_cut = egcut(undirected,[1],[8],list())
         increment_capacity(G,min_cut,n-l)
         result = nx.max_flow_min_cost(G,src,dst)
         paths = get_paths(result,src,dst)
@@ -44,9 +46,15 @@ def n_paths(G,src,dst,n):
         
 ''' Increment capacity on edge in minimum edge cut'''
 def increment_capacity(G,min_cut,k):
+    hist = []
     for cut in min_cut:
         for edge in cut:
-            G[edge[0]][edge[1]]['capacity'] += k 
+            if edge not in hist:
+                if edge[1] in G[edge[0]]:
+                    G[edge[0]][edge[1]]['capacity'] += k 
+                else:
+                    G[edge[1]][edge[0]]['capacity'] += k
+                hist.append(edge)
 
 ''' Create a subgraph by removing node in nodes '''
 def create_subgraph(G,nodes):
@@ -110,18 +118,14 @@ def egcut(G,s,t,res):
         s = list((set(s) | z))
         vx = vx - z
         cutset = minimal_cutset(G,s)
+        #print cutset
         if len(res) == 0:
             res.append(cutset)
         elif len(res[0]) > len(cutset):
             del res[:]
             res.append(cutset)
         elif len(res[0]) == len(cutset):
-            f = True
-            for edge in cutset:
-                if edge[0] != s[0] and edge[1] != t[0]:
-                    f = False
-            if f:
-                res.append(cutset)
+            res.append(cutset)
 
     n_vt = list()
     for v in (vx-set(t)):
@@ -175,7 +179,7 @@ G.add_edge(7,6,weight=1,capacity=1)
 G.add_edge(7,8,weight=1,capacity=1)
 G.add_edge(8,7,weight=1,capacity=1)
 
-print n_paths(G,1,8,3)
+#print n_paths(G,1,8,3)
 
 
 D = nx.DiGraph()
@@ -198,4 +202,38 @@ D.add_edge(5,7,weight=1,capacity=1)
 D.add_edge(6,8,weight=1,capacity=1)
 D.add_edge(7,8,weight=1,capacity=1)
 
-print n_paths(D,1,8,2)
+#print n_paths(D,1,8,2)
+
+N = nx.DiGraph()
+N.add_node(1)
+N.add_node(2)
+N.add_node(3)
+N.add_node(4)
+N.add_node(5)
+N.add_node(6)
+N.add_node(7)
+N.add_node(8)
+N.add_node(9)
+
+N.add_edge(1,2,weight=1,capacity=1)
+
+N.add_edge(1,3,weight=1,capacity=1)
+
+N.add_edge(2,5,weight=1,capacity=1)
+
+N.add_edge(3,4,weight=1,capacity=1)
+
+N.add_edge(4,8,weight=1,capacity=1)
+
+N.add_edge(5,6,weight=1,capacity=1)
+
+N.add_edge(5,7,weight=1,capacity=1)
+
+N.add_edge(6,7,weight=1,capacity=1)
+
+N.add_edge(6,9,weight=1,capacity=1)
+
+N.add_edge(7,9,weight=1,capacity=1)
+
+N.add_edge(8,9,weight=1,capacity=1)
+print n_paths(N,1,9,3)
