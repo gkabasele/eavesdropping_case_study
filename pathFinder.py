@@ -21,7 +21,7 @@ def get_paths(previous,src,dst):
                     succ[n] -= 1
                     if succ[n] == 0:
                         del succ[n]
-                        break
+                    break
                 else:
                     del succ[n]
         path.append(current) 
@@ -31,21 +31,49 @@ def get_paths(previous,src,dst):
             current = src
     return paths
 
+''' Find n maximally disjoint paths'''
 def n_paths(G,src,dst,n):
     result = nx.max_flow_min_cost(G,src,dst)
     paths = get_paths(result,src,dst)
     l = len(paths)
     if l < n:
         undirected = nx.Graph(G)
-        min_cut = egcut(undirected,[1],[8],list())
-        increment_capacity(G,min_cut,n-l)
+        min_cut = egcut(undirected,[src],[dst],list())
+        increase_capacity(G,min_cut,n-l)
+        increase_cost(G,paths)
         result = nx.max_flow_min_cost(G,src,dst)
         paths = get_paths(result,src,dst)
     return paths
 
+def min_n_paths(G,src,dst,n):
+    result = nx.max_flow_min_cost(G,src,dst)
+    paths = get_paths(result,src,dst)
+    l = len(paths)
+    if l < n:
+        undirected = nx.Graph(G)
+        min_cut = egcut(undirected,[src],[dst],list())
+        increase_capacity(G,min_cut,n-l)
+        increase_cost(G,paths)
         
-''' Increment capacity on edge in minimum edge cut'''
-def increment_capacity(G,min_cut,k):
+        try:
+            cost,result = nx.network_simplex(G)
+            paths = get_paths(result,src,dst)
+            return paths
+        except nx.exception.NetworkXUnfeasible:
+            return paths
+    return paths 
+def display_graph(G):
+    for edge in G.edges():
+        print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
+
+''' Increase cost of edge already used'''
+def increase_cost(G,paths):
+    for path in paths:
+        for i in range(len(path)-1):
+            G[path[i]][path[i+1]]['weight'] += 10
+        
+''' Increase capacity on edge in minimum edge cut'''
+def increase_capacity(G,min_cut,k):
     hist = []
     for cut in min_cut:
         for edge in cut:
@@ -118,7 +146,6 @@ def egcut(G,s,t,res):
         s = list((set(s) | z))
         vx = vx - z
         cutset = minimal_cutset(G,s)
-        #print cutset
         if len(res) == 0:
             res.append(cutset)
         elif len(res[0]) > len(cutset):
@@ -139,14 +166,14 @@ def egcut(G,s,t,res):
     return res
 
 G = nx.DiGraph()
-G.add_node(1)
+G.add_node(1,demand=-3)
 G.add_node(2)
 G.add_node(3)
 G.add_node(4)
 G.add_node(5)
 G.add_node(6)
 G.add_node(7)
-G.add_node(8)
+G.add_node(8,demand=3)
 
 G.add_edge(1,2,weight=1,capacity=1)
 G.add_edge(2,1,weight=1,capacity=1)
@@ -179,18 +206,18 @@ G.add_edge(7,6,weight=1,capacity=1)
 G.add_edge(7,8,weight=1,capacity=1)
 G.add_edge(8,7,weight=1,capacity=1)
 
-#print n_paths(G,1,8,3)
+print min_n_paths(G,1,8,3)
 
 
 D = nx.DiGraph()
-D.add_node(1)
+D.add_node(1,demand=-2)
 D.add_node(2)
 D.add_node(3)
 D.add_node(4)
 D.add_node(5)
 D.add_node(6)
 D.add_node(7)
-D.add_node(8)
+D.add_node(8,demand=2)
 
 D.add_edge(1,2,weight=1,capacity=1)
 D.add_edge(1,3,weight=1,capacity=1)
@@ -202,10 +229,10 @@ D.add_edge(5,7,weight=1,capacity=1)
 D.add_edge(6,8,weight=1,capacity=1)
 D.add_edge(7,8,weight=1,capacity=1)
 
-#print n_paths(D,1,8,2)
+print min_n_paths(D,1,8,2)
 
 N = nx.DiGraph()
-N.add_node(1)
+N.add_node(1,demand=-3)
 N.add_node(2)
 N.add_node(3)
 N.add_node(4)
@@ -213,7 +240,7 @@ N.add_node(5)
 N.add_node(6)
 N.add_node(7)
 N.add_node(8)
-N.add_node(9)
+N.add_node(9,demand=3)
 
 N.add_edge(1,2,weight=1,capacity=1)
 
@@ -236,4 +263,5 @@ N.add_edge(6,9,weight=1,capacity=1)
 N.add_edge(7,9,weight=1,capacity=1)
 
 N.add_edge(8,9,weight=1,capacity=1)
-print n_paths(N,1,9,3)
+
+print min_n_paths(N,1,9,3)
