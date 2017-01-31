@@ -32,36 +32,29 @@ def get_paths(previous,src,dst):
     return paths
 
 ''' Find n maximally disjoint paths'''
-def n_paths(G,src,dst,n):
-    result = nx.max_flow_min_cost(G,src,dst)
-    paths = get_paths(result,src,dst)
-    l = len(paths)
-    if l < n:
-        undirected = nx.Graph(G)
-        min_cut = egcut(undirected,[src],[dst],list())
-        increase_capacity(G,min_cut,n-l)
-        increase_cost(G,paths)
+def min_n_paths(G,src,dst,n):
+    try:
+        result = nx.network_simplex(G)
+        paths = get_paths(result,src,dst)
+        return paths
+    except nx.exception.NetworkXUnfeasible:
         result = nx.max_flow_min_cost(G,src,dst)
         paths = get_paths(result,src,dst)
-    return paths
+        l = len(paths)
+        if l < n:
+            undirected = nx.Graph(G)
+            min_cut = egcut(undirected,[src],[dst],list())
+            increase_capacity(G,min_cut,n-l)
+            increase_cost(G,paths)
+            try:
+                cost,result = nx.network_simplex(G)
+                paths = get_paths(result,src,dst)
+                return paths
+            except nx.exception.NetworkXUnfeasible:
+                return paths
+        return paths 
 
-def min_n_paths(G,src,dst,n):
-    result = nx.max_flow_min_cost(G,src,dst)
-    paths = get_paths(result,src,dst)
-    l = len(paths)
-    if l < n:
-        undirected = nx.Graph(G)
-        min_cut = egcut(undirected,[src],[dst],list())
-        increase_capacity(G,min_cut,n-l)
-        increase_cost(G,paths)
-        
-        try:
-            cost,result = nx.network_simplex(G)
-            paths = get_paths(result,src,dst)
-            return paths
-        except nx.exception.NetworkXUnfeasible:
-            return paths
-    return paths 
+''' Display edges of the graph G'''
 def display_graph(G):
     for edge in G.edges():
         print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
