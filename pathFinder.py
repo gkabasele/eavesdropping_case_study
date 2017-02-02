@@ -1,6 +1,5 @@
 # !/bin/python
 import networkx as nx
-from networkx.algorithms.connectivity import minimum_st_edge_cut
 
 ''' Build the paths from the flow network'''
 def get_paths(previous,src,dst):
@@ -11,19 +10,23 @@ def get_paths(previous,src,dst):
         path = []
         while current != dst:
             path.append(current)
-            succ = previous[current]
-            if len(succ.keys()) == 0:
-                finished = True
-                break
-            for n in succ.keys():
-                if succ[n] > 0:
-                    current = n
-                    succ[n] -= 1
-                    if succ[n] == 0:
-                        del succ[n]
+            try:
+                succ = previous[current]
+                if len(succ.keys()) == 0:
+                    finished = True
                     break
-                else:
-                    del succ[n]
+                for n in succ.keys():
+                    if succ[n] > 0:
+                        current = n
+                        succ[n] -= 1
+                        if succ[n] == 0:
+                            del succ[n]
+                        break
+                    else:
+                        del succ[n]
+            except IndexError:
+                print "Graph:%s,current:%s"%(previous,current)
+                return
         path.append(current) 
         if not finished:
             if path not in paths:
@@ -31,10 +34,27 @@ def get_paths(previous,src,dst):
             current = src
     return paths
 
+''' From undirected graph to undirected'''
+def to_directed(G,src,dst,n):
+    DG = nx.DiGraph()
+    for node in G.nodes():
+        if node == src:
+            DG.add_node(node,demand=-n)
+        elif node == dst:
+            DG.add_node(node,demand=n)
+        else:
+            DG.add_node(node)
+        for neighbor in G.neighbors(node):
+            if type(neighbor) == int:
+                c = G[node][neighbor]['capacity']
+                w = G[node][neighbor]['weight']
+                DG.add_edge(node,neighbor,capacity=c,weight=w)
+    return DG
+
 ''' Find n maximally disjoint paths'''
 def min_n_paths(G,src,dst,n):
     try:
-        result = nx.network_simplex(G)
+        cost,result = nx.network_simplex(G)
         paths = get_paths(result,src,dst)
         return paths
     except nx.exception.NetworkXUnfeasible:
@@ -56,14 +76,16 @@ def min_n_paths(G,src,dst,n):
 
 ''' Display edges of the graph G'''
 def display_graph(G):
+    #for edge in G.edges():
+    #    print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
     for edge in G.edges():
-        print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
+        print edge
 
 ''' Increase cost of edge already used'''
 def increase_cost(G,paths):
     for path in paths:
         for i in range(len(path)-1):
-            G[path[i]][path[i+1]]['weight'] += 10
+            G[path[i]][path[i+1]]['weight'] += 1
         
 ''' Increase capacity on edge in minimum edge cut'''
 def increase_capacity(G,min_cut,k):
@@ -79,13 +101,8 @@ def increase_capacity(G,min_cut,k):
 
 ''' Create a subgraph by removing node in nodes '''
 def create_subgraph(G,nodes):
-    new_graph = nx.Graph()
-    for node in G.nodes():
-        if node not in nodes:
-            new_graph.add_node(node)
-            for neighbor in G.neighbors(node):
-                if neighbor not in nodes:
-                    new_graph.add_edge(node,neighbor)
+    new_graph = nx.Graph(G)
+    new_graph.remove_nodes_from(nodes)
     return new_graph
 
 '''Set of all vertices adjacent to a vertex in nodes but not in nodes'''
@@ -127,17 +144,24 @@ def flat_list(l):
 def egcut(G,s,t,res):
     if len(t) >= 2:
         t = flat_list(t)
+    #Step 1 set of all vertices, adjacent to a vertex in s but not in s
     vx = set_vertices(G,s)
+
+    #Step 2 Subgraph = G/s
     subgraph = create_subgraph(G,s)
+    #Step 3 
     cc = connected_component(subgraph,t[0]) 
     nodes = set(G.nodes())
     z = (nodes - set(s) - cc)
-
+    #Step 4
     if len((z & set(t)))!= 0 :
         return
     else:
+        #Step 5
         s = list((set(s) | z))
+        #Step 6
         vx = vx - z
+        #Step 7-8
         cutset = minimal_cutset(G,s)
         if len(res) == 0:
             res.append(cutset)
@@ -147,114 +171,19 @@ def egcut(G,s,t,res):
         elif len(res[0]) == len(cutset):
             res.append(cutset)
 
+    #Step 9
     n_vt = list()
+    #Step 10-11
     for v in (vx-set(t)):
         vx.remove(v)
         n_vs = list(s)
         n_t = list(t)
         n_vs.append(v)
         n_t.append(n_vt)
+        #Step 12
         egcut(G,n_vs,n_t,res)
+        #Step 13
         n_vt.append(v)
     return res
 
-G = nx.DiGraph()
-G.add_node(1,demand=-3)
-G.add_node(2)
-G.add_node(3)
-G.add_node(4)
-G.add_node(5)
-G.add_node(6)
-G.add_node(7)
-G.add_node(8,demand=3)
 
-G.add_edge(1,2,weight=1,capacity=1)
-G.add_edge(2,1,weight=1,capacity=1)
-
-G.add_edge(1,5,weight=1,capacity=1)
-G.add_edge(5,1,weight=1,capacity=1)
-
-G.add_edge(2,3,weight=1,capacity=1)
-G.add_edge(3,2,weight=1,capacity=1)
-
-G.add_edge(3,4,weight=1,capacity=1)
-G.add_edge(4,3,weight=1,capacity=1)
-
-G.add_edge(5,4,weight=1,capacity=1)
-G.add_edge(4,5,weight=1,capacity=1)
-
-G.add_edge(4,6,weight=1,capacity=1)
-G.add_edge(6,4,weight=1,capacity=1)
-
-G.add_edge(4,8,weight=1,capacity=1)
-G.add_edge(8,4,weight=1,capacity=1)
-
-
-G.add_edge(5,6,weight=1,capacity=1)
-G.add_edge(6,5,weight=1,capacity=1)
-
-G.add_edge(6,7,weight=1,capacity=1)
-G.add_edge(7,6,weight=1,capacity=1)
-
-G.add_edge(7,8,weight=1,capacity=1)
-G.add_edge(8,7,weight=1,capacity=1)
-
-print min_n_paths(G,1,8,3)
-
-
-D = nx.DiGraph()
-D.add_node(1,demand=-2)
-D.add_node(2)
-D.add_node(3)
-D.add_node(4)
-D.add_node(5)
-D.add_node(6)
-D.add_node(7)
-D.add_node(8,demand=2)
-
-D.add_edge(1,2,weight=1,capacity=1)
-D.add_edge(1,3,weight=1,capacity=1)
-D.add_edge(2,4,weight=1,capacity=1)
-D.add_edge(3,4,weight=1,capacity=1)
-D.add_edge(4,5,weight=1,capacity=1)
-D.add_edge(5,6,weight=1,capacity=1)
-D.add_edge(5,7,weight=1,capacity=1)
-D.add_edge(6,8,weight=1,capacity=1)
-D.add_edge(7,8,weight=1,capacity=1)
-
-print min_n_paths(D,1,8,2)
-
-N = nx.DiGraph()
-N.add_node(1,demand=-3)
-N.add_node(2)
-N.add_node(3)
-N.add_node(4)
-N.add_node(5)
-N.add_node(6)
-N.add_node(7)
-N.add_node(8)
-N.add_node(9,demand=3)
-
-N.add_edge(1,2,weight=1,capacity=1)
-
-N.add_edge(1,3,weight=1,capacity=1)
-
-N.add_edge(2,5,weight=1,capacity=1)
-
-N.add_edge(3,4,weight=1,capacity=1)
-
-N.add_edge(4,8,weight=1,capacity=1)
-
-N.add_edge(5,6,weight=1,capacity=1)
-
-N.add_edge(5,7,weight=1,capacity=1)
-
-N.add_edge(6,7,weight=1,capacity=1)
-
-N.add_edge(6,9,weight=1,capacity=1)
-
-N.add_edge(7,9,weight=1,capacity=1)
-
-N.add_edge(8,9,weight=1,capacity=1)
-
-print min_n_paths(N,1,9,3)
