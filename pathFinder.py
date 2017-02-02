@@ -62,8 +62,9 @@ def min_n_paths(G,src,dst,n):
         paths = get_paths(result,src,dst)
         l = len(paths)
         if l < n:
-            undirected = nx.Graph(G)
-            min_cut = egcut(undirected,[src],[dst],list())
+            #undirected = nx.Graph(G)
+            #min_cut = egcut(undirected,[src],[dst],list())
+            min_cut = min_cut_edges(G,result,src,dst)
             increase_capacity(G,min_cut,n-l)
             increase_cost(G,paths)
             try:
@@ -89,19 +90,17 @@ def increase_cost(G,paths):
         
 ''' Increase capacity on edge in minimum edge cut'''
 def increase_capacity(G,min_cut,k):
-    hist = []
     for cut in min_cut:
         for edge in cut:
-            if edge not in hist:
-                if edge[1] in G[edge[0]]:
-                    G[edge[0]][edge[1]]['capacity'] += k 
-                else:
-                    G[edge[1]][edge[0]]['capacity'] += k
-                hist.append(edge)
+            if edge[1] in G[edge[0]]:
+                G[edge[0]][edge[1]]['capacity'] += k 
+            else:
+                G[edge[1]][edge[0]]['capacity'] += k
 
-''' Create a subgraph by removing node in nodes '''
+''' Create a subgraph by removing node from nodes in G '''
 def create_subgraph(G,nodes):
-    new_graph = nx.Graph(G)
+    #new_graph = nx.Graph(G)
+    new_graph = G.copy()
     new_graph.remove_nodes_from(nodes)
     return new_graph
 
@@ -114,7 +113,7 @@ def set_vertices(G,nodes):
                 vx.add(neighbor)
     return vx
 
-'''Set of all edges incident to a vertex in nodes but not in subgraph'''
+'''Set of all edges incident to a vertex in nodes but not in subgraph G'''
 def minimal_cutset(G,nodes):
     cutset = set()
     for node in nodes:
@@ -140,6 +139,29 @@ def flat_list(l):
             nl.append(item)
     return nl
 
+'''Compute cost of flow'''
+def flow_cost(G,flows):
+    cost = 0
+    for head in flows:
+        for tail in flows[head]:
+            if flows[head][tail] >0:
+                cost += flows[head][tail]*G[head][tail]['weight']
+    return cost
+
+
+def min_cut_edges(G,flows,s,t):
+    cut_set = set()
+    mincost =  flow_cost(G,flows)
+    for head in flows:
+        for tail in flows[head]:
+            if flows[head][tail] > 0:
+                new_graph = G.copy()
+                new_graph.remove_edge(head,tail)
+                new_flows = nx.max_flow_min_cost(new_graph,s,t)
+                current_cost = flow_cost(G,new_flows)
+                if current_cost < mincost:
+                    cut_set.add((head,tail))
+    return cut_set
 ''' s,t are a list'''
 def egcut(G,s,t,res):
     if len(t) >= 2:
