@@ -1,5 +1,6 @@
 # !/bin/python
 import networkx as nx
+import copy
 
 ''' Build the paths from the flow network'''
 def get_paths(previous,src,dst):
@@ -31,6 +32,8 @@ def get_paths(previous,src,dst):
         if not finished:
             if path not in paths:
                 paths.append(path)
+            else:
+                print "duplicate path"
             current = src
     return paths
 
@@ -59,14 +62,15 @@ def min_n_paths(G,src,dst,n):
         return paths
     except nx.exception.NetworkXUnfeasible:
         result = nx.max_flow_min_cost(G,src,dst)
+        flows = copy.deepcopy(result)
         paths = get_paths(result,src,dst)
+        print paths
         l = len(paths)
         if l < n:
-            #undirected = nx.Graph(G)
-            #min_cut = egcut(undirected,[src],[dst],list())
-            min_cut = min_cut_edges(G,result,src,dst)
+            min_cut = min_cut_edges(G,flows,src,dst)
+            print min_cut
             increase_capacity(G,min_cut,n-l)
-            increase_cost(G,paths)
+            #increase_cost(G,paths)
             try:
                 cost,result = nx.network_simplex(G)
                 paths = get_paths(result,src,dst)
@@ -90,12 +94,11 @@ def increase_cost(G,paths):
         
 ''' Increase capacity on edge in minimum edge cut'''
 def increase_capacity(G,min_cut,k):
-    for cut in min_cut:
-        for edge in cut:
-            if edge[1] in G[edge[0]]:
-                G[edge[0]][edge[1]]['capacity'] += k 
-            else:
-                G[edge[1]][edge[0]]['capacity'] += k
+    for edge in min_cut:
+        if edge[1] in G[edge[0]]:
+            G[edge[0]][edge[1]]['capacity'] += k 
+        else:
+            G[edge[1]][edge[0]]['capacity'] += k
 
 ''' Create a subgraph by removing node from nodes in G '''
 def create_subgraph(G,nodes):
@@ -149,6 +152,7 @@ def flow_cost(G,flows):
     return cost
 
 
+'''Find edge belonging to a min s-t cut'''
 def min_cut_edges(G,flows,s,t):
     cut_set = set()
     mincost =  flow_cost(G,flows)
@@ -162,6 +166,7 @@ def min_cut_edges(G,flows,s,t):
                 if current_cost < mincost:
                     cut_set.add((head,tail))
     return cut_set
+
 ''' s,t are a list'''
 def egcut(G,s,t,res):
     if len(t) >= 2:
@@ -209,3 +214,36 @@ def egcut(G,s,t,res):
     return res
 
 
+'''convex cost function breakpoints [],slopes[]'''
+def convex_flow_function(edge,breakpoints,slopes,flow):
+    def segment_cost(edge,bp1,bp2,flow):
+        if flow <= bp1:
+            f = 0
+        elif bp1 <= flow and flow <= bp2:
+            f = flow - bp1
+        elif flow >= bp2:
+            f = bp2 - bp1
+        return f
+   
+    flow_segment = []
+    for i in range(len(breakpoints)-1):
+        flow_segment.append(segment_cost(edge,breakpoints[i],breakpoints[i+1],flow))
+
+    cost = sum([x*y for x,y in zip(flow_segment,slopes)])
+    return cost
+   
+''' edge = {capacity:int, weight : (breakpoints,slopes)}'''
+def graph_transformation(G):
+    NG = nx.MultiDiGraph()
+    NG.add_nodes_from(G.nodes())
+    for e in G.edges_iter(data='weight'):
+        # e (node,node,(breakpoints,slopes))
+        breakpoints,slopes= e[2]
+        for i in range(len(breakpoints)-1):
+            new_weight = slopes[i]      
+            new_capacity = breakpoints[i+1]-breakpoints[i]
+            NG.add_edge(e[0],e[1],weight=new_weight,capacity=new_capacity)
+    return NG
+
+def cycle_cancelling(G):
+    pass

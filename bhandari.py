@@ -87,15 +87,6 @@ class Graph:
         return s
     
 
-class MinCutComputer:
-
-    def __init__(self):
-        pass
-
-
-
-
-
 class DisjointPath:
     
     def __init__(self):
@@ -147,8 +138,8 @@ class DisjointPath:
         negative_cycle = False 
         for node in graph.vertices():
             for n in graph.neighbor(node):
-                assert distances[n] <= distances[node] + graph.cost_edge(node,n)
-                #negative_cycle = (distances[n] <= distances[node] + graph.cost_edge(node,n))
+                #assert distances[n] <= distances[node] + graph.cost_edge(node,n)
+                negative_cycle = (distances[n] <= distances[node] + graph.cost_edge(node,n))
         if negative_cycle:
             return (negative_cycle,path,distances)
         return (path,distances)
