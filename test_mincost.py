@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pathFinder as pf
 import cProfile
+
+'''
+Test on different graph  to compute several paths  
+
 G = nx.DiGraph()
 G.add_node(1,demand=-3)
 G.add_node(2)
@@ -44,9 +48,8 @@ G.add_edge(7,6,weight=1,capacity=1)
 G.add_edge(7,8,weight=1,capacity=1)
 G.add_edge(8,7,weight=1,capacity=1)
 
-#print pf.min_n_paths(G,1,8,3)
+print pf.min_n_paths(G,1,8,3)
 
-'''
 D = nx.DiGraph()
 D.add_node(1,demand=-2)
 D.add_node(2)
@@ -103,7 +106,12 @@ N.add_edge(7,9,weight=1,capacity=1)
 N.add_edge(8,9,weight=1,capacity=1)
 
 print pf.min_n_paths(N,1,9,3)
+'''
 
+
+
+'''
+Test on random generate graph
 
 s = 20
 t = 21
@@ -130,16 +138,25 @@ plt.show()
 
 #cProfile.run('print pf.min_n_paths(G,1,8,3)')
 '''
+
+
+#Convex cost function problem
 slopes = [1,2]
 breakpoints = [0,2,4]
 
 G = nx.DiGraph()
-G.add_nodes_from([1,2,3,4])
+G.add_node(1,demand=-2)
+G.add_node(2)
+G.add_node(3)
+G.add_node(4,demand=2)
 G.add_edge(1,2,weight=(breakpoints,slopes),capacity=4)
-G.add_edge(2,3,weight=(breakpoints,slopes),capacity=4)
+G.add_edge(1,3,weight=(breakpoints,slopes),capacity=4)
+G.add_edge(2,4,weight=(breakpoints,slopes),capacity=4)
 G.add_edge(3,4,weight=(breakpoints,slopes),capacity=4)
 #print pf.convex_flow_function((1,2),breakpoints,slopes,3)
 NG = pf.graph_transformation(G)
-print NG.nodes()
-print NG.edges(data='capacity')
-print NG.edges(data='weight')
+print pf.augmenting_path(NG,1,4,2)
+
+
+
+

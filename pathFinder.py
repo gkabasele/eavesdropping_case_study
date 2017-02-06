@@ -1,6 +1,7 @@
 # !/bin/python
 import networkx as nx
 import copy
+import sys
 
 ''' Build the paths from the flow network'''
 def get_paths(previous,src,dst):
@@ -245,5 +246,95 @@ def graph_transformation(G):
             NG.add_edge(e[0],e[1],weight=new_weight,capacity=new_capacity)
     return NG
 
-def cycle_cancelling(G):
+def build_residual_graph(G,flows=None):
+    if flows is None:
+        return G.copy()
+    else:
+        for u in flows.keys():
+            for v in flows[u]:
+                for e in flows[u][v]:
+                    f = flows[u][v][e]
+                    G[u][v][e]['capacity']-=f
+                    w,c = G[u][v][e].values()
+                    if c <= 0:
+                        G.remove_edge(u,v,key=e)
+                    if not G.has_edge(v,u,key=e ):
+                        G.add_edge(v,u,key=e,weight=-w,capacity=f)
+                    else:
+                        G[v][u][e]['capacity']+=f
+                            
+            
+''' Find predecessors with a bfs '''
+def exist_flow_path(G,s,t,pred):
+    # BFS
+    visited = {}
+    for n in G.nodes_iter():
+        visited[n] = (n == s)
+    queue = [s]
+
+    while queue:
+        current = queue.pop(0)
+        for n in G.neighbors(current):
+            # Mulitgraph so several edge between two nodes
+            for i in G[current][n]:
+                c = G[current][n][i]['capacity']
+                if not visited[n] and c > 0:
+                    queue.append(n)
+                    visited[n] = True
+                    # Previous node and the edge to use
+                    pred[n] = (current,i) 
+    return visited[t]
+
+def feasible_path(G,s,t,d):
+    pred = {}
+    path = []
+    if exist_flow_path(G,s,t,pred): 
+      path_capacity = d
+      current = t
+      path = [(current,0)]
+      while current != s:
+          #Find path bottleneck
+          p,e = pred[current]
+          c = G[p][current][e]['capacity']
+          path_capacity = min(path_capacity,c)
+          current = p
+          path.insert(0,(current,e))
+      return(path,path_capacity)
+    else:
+        pass
+
+    
+
+def augmenting_path(G,s,t,d):
+    max_flow = d
+    residual = build_residual_graph(G)
+    flows = {}
+    path = []
+    path_capacity = d
+    while True:
+        if max_flow > 0:
+            path,path_capacity = feasible_path(residual,s,t,max_flow)
+            if path:
+                for i in range(len(path)-1):
+                    u,e = path[i]
+                    v = path[i+1][0]
+                    if path_capacity <= residual[u][v][e]['capacity']:
+                            if u not in flows:
+                                flows[u] = { v : {e : path_capacity}}
+                            elif v not in flows[u]:
+                                flows[u][v] = {e:path_capacity}
+                            elif e not in flows[u][v]:
+                                flows[u][v][e] = path_capacity
+                            else:
+                                flows[u][v][e] += path_capacity
+                            build_residual_graph(residual,flows)
+                max_flow -= path_capacity
+            else:
+                break
+        else:
+            break
+    return flows
+
+    
+def negative_cycle_cancelling(G,s,t):
     pass
