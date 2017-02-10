@@ -4,7 +4,7 @@ import networkx as nx
 import pathFinder as pf
 import cProfile
 
-'''
+'''{
 Test on different graph  to compute several paths  
 
 G = nx.DiGraph()
@@ -106,11 +106,11 @@ N.add_edge(7,9,weight=1,capacity=1)
 N.add_edge(8,9,weight=1,capacity=1)
 
 print pf.min_n_paths(N,1,9,3)
-'''
+}'''
 
 
 
-'''
+'''{
 Test on random generate graph
 
 s = 20
@@ -137,26 +137,83 @@ print pf.min_n_paths(directed,s,t,3)
 plt.show()
 
 #cProfile.run('print pf.min_n_paths(G,1,8,3)')
-'''
+}'''
+'''{
+# Negative Cycle Detection
+G = nx.MultiDiGraph()
+G.add_nodes_from([0,1,2,3,4,5])
+G.add_edge(0,1,weight=1)
+G.add_edge(1,0,weight=1)
+G.add_edge(1,2,weight=2)
+G.add_edge(2,1,weight=-2)
+G.add_edge(1,3,weight=2)
+G.add_edge(3,1,weight=-2)
+G.add_edge(2,3,weight=1)
+G.add_edge(4,2,weight=-3)
+G.add_edge(3,4,weight=1)
+G.add_edge(4,3,weight=-1)
+G.add_edge(4,5,weight=1)
+distances = {}
+pred = {}
+pf.negative_edge_cycle(G,0,distances,pred)
+print pred
+print pf.get_cycle(G,pred,distances,0,5)
+}'''
 
-
+'''{
 #Convex cost function problem
-slopes = [1,2]
+slopes_cheap = [1,2]
+slopes_exp = [2,3]
 breakpoints = [0,2,4]
 
 G = nx.DiGraph()
-G.add_node(1,demand=-2)
+G.add_node(1,demand=-4)
 G.add_node(2)
 G.add_node(3)
-G.add_node(4,demand=2)
-G.add_edge(1,2,weight=(breakpoints,slopes),capacity=4)
-G.add_edge(1,3,weight=(breakpoints,slopes),capacity=4)
-G.add_edge(2,4,weight=(breakpoints,slopes),capacity=4)
-G.add_edge(3,4,weight=(breakpoints,slopes),capacity=4)
+G.add_node(4,demand=4)
+G.add_edge(1,2,weight=(breakpoints,slopes_exp),capacity=4)
+G.add_edge(1,3,weight=(breakpoints,slopes_cheap),capacity=4)
+G.add_edge(2,4,weight=(breakpoints,slopes_exp),capacity=4)
+G.add_edge(3,4,weight=(breakpoints,slopes_cheap),capacity=4)
 #print pf.convex_flow_function((1,2),breakpoints,slopes,3)
 NG = pf.graph_transformation(G)
-print pf.augmenting_path(NG,1,4,2)
+#print pf.feasible_flow(NG,1,4,2)
+flows = pf.negative_cycle_cancelling(G,NG,1,4,4)
+print pf.convert_flows(flows)
+}'''
 
+G = nx.DiGraph()
+G.add_node(1,demand=-3)
+G.add_node(2)
+G.add_node(3)
+G.add_node(4)
+G.add_node(5)
+G.add_node(6)
+G.add_node(7)
+G.add_node(8,demand=3)
 
+slopes,breakpoints = pf.generate_cost(3)
 
+G.add_edge(1,2,weight=(breakpoints,slopes),capacity=3)
 
+G.add_edge(1,5,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(2,3,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(3,4,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(5,4,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(4,6,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(4,8,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(5,6,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(6,7,weight=(breakpoints,slopes),capacity=3)
+
+G.add_edge(7,8,weight=(breakpoints,slopes),capacity=3)
+
+NG = pf.graph_transformation(G)
+flows = pf.negative_cycle_cancelling(G,NG,1,8,3)
+print pf.convert_flows(flows)

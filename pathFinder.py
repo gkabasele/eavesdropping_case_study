@@ -84,8 +84,9 @@ def min_n_paths(G,src,dst,n):
 def display_graph(G):
     #for edge in G.edges():
     #    print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
-    for edge in G.edges():
+    for edge in G.edges_iter(data=True):
         print edge
+    print "\n"
 
 ''' Increase cost of edge already used'''
 def increase_cost(G,paths):
@@ -250,18 +251,20 @@ def build_residual_graph(G,flows=None):
     if flows is None:
         return G.copy()
     else:
-        for u in flows.keys():
+        for u in flows:
             for v in flows[u]:
                 for e in flows[u][v]:
                     f = flows[u][v][e]
-                    G[u][v][e]['capacity']-=f
-                    w,c = G[u][v][e].values()
-                    if c <= 0:
-                        G.remove_edge(u,v,key=e)
-                    if not G.has_edge(v,u,key=e ):
-                        G.add_edge(v,u,key=e,weight=-w,capacity=f)
-                    else:
-                        G[v][u][e]['capacity']+=f
+                    # flow defined on original graph but G has edge that have been removed
+                    if v in G[u] and e in G[u][v]:
+                        G[u][v][e]['capacity']-=f
+                        c,w = G[u][v][e].values()
+                        if c <= 0:
+                            G.remove_edge(u,v,key=e)
+                        if not G.has_edge(v,u,key=e ):
+                            G.add_edge(v,u,key=e,weight=-w,capacity=f)
+                        else:
+                            G[v][u][e]['capacity']+=f
                             
             
 ''' Find predecessors with a bfs '''
@@ -305,7 +308,7 @@ def feasible_path(G,s,t,d):
 
     
 
-def augmenting_path(G,s,t,d):
+def feasible_flow(G,s,t,d):
     max_flow = d
     residual = build_residual_graph(G)
     flows = {}
@@ -335,6 +338,167 @@ def augmenting_path(G,s,t,d):
             break
     return flows
 
-    
-def negative_cycle_cancelling(G,s,t):
-    pass
+def build_convex_residual_graph(G,NG,flows):
+    for u in flows:
+        for v in flows[u]:
+            for e in flows[u][v]:
+                f = flows[u][v][e]
+                c,w =  NG[u][v][e].values()
+                if f >= c:
+                    NG.remove_edge(u,v,key=e)
+                    if not NG.has_edge(v,u,key=e):
+                        NG.add_edge(v,u,key=e,weight= -w,capacity=c)
+
+def negative_edge_cycle(G,s,distances,pred):
+    for node in G.nodes_iter():
+        if node == s:
+            distances[node] = 0
+        else:
+            distances[node] = sys.maxint
+    for i in range(len(G.nodes())-1):
+        for u in G.nodes_iter():
+            for v in G.neighbors(u):
+                for e in G[u][v]:
+                    tmp = distances[u] + G[u][v][e]['weight']
+                    if tmp < distances[v]:
+                        distances[v] = tmp
+                        pred[v] = (u,e)
+
+    #detecting negative cycle with last iteration
+    for u in G.nodes_iter():
+        for v in G.neighbors(u):
+            for e in G[u][v]:
+                if distances[v] > distances[u] + G[u][v][e]['weight']:
+                    distances['start'] = v
+                    return True
+    return False
+
+def node_in_cycle(node,cycle):
+    for n in cycle:
+        if n[0] == node[0]:
+            return True
+    return False
+
+''' Get negative cycle from predecessor graph'''
+def get_cycle(G,pred,distances,s,t):
+    # Go from the ancestor for which the distance has changed 
+    current = t
+    cycle = []
+    current_cost = 0
+    while current != s:
+        # p ( node, edgeid)
+        p = pred[current]
+        if node_in_cycle(p,cycle):
+            return cycle
+        cycle.insert(0,p)
+        current_cost+= G[p[0]][current][p[1]]['weight']
+        current = p[0]
+    if current in pred and current_cost != distances[t]:
+        while current_cost != distances[t]:
+            p = pred[current]
+            if node_in_cycle(p,cycle):
+                return cycle
+            cycle.insert(0,p)
+            current_cost += G[p[0]][current][p[1]]['weight']
+            current = p[0]
+
+    return cycle 
+
+def node_flow(G,n,flows,out=True):
+    if not out:
+        in_flow = 0 
+        for u,v,e in G.in_edges(n):
+            if u in flows and v in flows[u] and e in flows[u][v][e]:
+                in_flow += flows[u][v][e]
+                return in_flow
+    else:
+        out_flow = 0
+        for u,v,e in G.out_edges(n):
+            if u in flows and v in flows[u] and e in flows[u][v][e]:
+                out_flow += flows[u][v][e]
+        return out_flow 
+
+''' Find the minimum capacity in a negative cycle'''
+def get_cycle_capacity(G,cycle):
+    cap = sys.maxint
+    for i in range(len(cycle)-1):
+       # (node,edgeid)
+       u = cycle[i]
+       v = cycle[i+1]
+       cap = min(cap,G[u[0]][v[0]][u[1]]['capacity']) 
+    u = cycle[-1]
+    v = cycle[0]
+    cap = min(cap,G[u[0]][v[0]][u[1]]['capacity']) 
+    return cap
+
+def update_flow(u,v,e,flows,amount):
+    if u not in flows:
+        flows[u]= {}
+    if v not in flows[u]:
+        flows[u][v] = {}
+    if e not in flows[u][v]:
+        flows[u][v][e] = amount
+    else:
+        flows[u][v][e] += amount
+
+    if flows[u][v][e] <= 0:
+        flows[u][v].pop(e,None)
+
+def augment_flow_along_cycle(G,flows,cycle,cap):
+    for i in range(len(cycle)-1):
+        # (node,edgeid)
+        u,e = cycle[i]
+        v,d = cycle[i+1]
+        # edge has been reversed so we decrease the flow on the edge
+        if G[u][v][e]['weight'] < 0:
+            update_flow(v,u,e,flows,-cap)
+        else:
+            update_flow(u,v,e,flows,cap)
+    u,e = cycle[-1]
+    v,d = cycle[0]
+    if G[u][v][e]['weight'] < 0:
+        update_flow(v,u,e,flows,-cap)
+    else:
+        update_flow(u,v,e,flows,cap)
+
+
+''' G is the original graph, NG is the transformed graph'''
+def negative_cycle_cancelling(G,NG,s,t,d):
+    flows = feasible_flow(NG,s,t,d)
+    residual = NG.copy()  
+    build_convex_residual_graph(G,residual,flows)
+    distances = {}
+    pred = {}
+    while negative_edge_cycle(residual,s,distances,pred):
+        #print "Flows:%s\n"%flows
+        #display_graph(residual)
+        print pred
+        cycle = get_cycle(residual,pred,distances,s,t)
+        print cycle
+        cap = get_cycle_capacity(residual,cycle)
+        augment_flow_along_cycle(residual,flows,cycle,cap)
+        #FIXME create new graph while changing edge instead of copying
+        residual = NG.copy()
+        build_convex_residual_graph(G,residual,flows)
+        distances = {}
+        pred = {}
+
+    return flows
+
+''' Convert flows for convex cost function graph to original graph'''
+def convert_flows(flows):
+    f = {}
+    for u in flows:
+        for v in flows[u]:
+            if u not in f:
+                f[u] = {v:0}
+            else:
+                f[u].update({v:0})
+            for e in flows[u][v]:
+                f[u][v] += flows[u][v][e]
+    return f
+
+def generate_cost(n):
+    slopes = range(1,n+1)
+    breakpoints = range(n+1)
+    return (slopes,breakpoints) 
