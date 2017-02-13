@@ -175,45 +175,49 @@ G.add_edge(1,2,weight=(breakpoints,slopes_exp),capacity=4)
 G.add_edge(1,3,weight=(breakpoints,slopes_cheap),capacity=4)
 G.add_edge(2,4,weight=(breakpoints,slopes_exp),capacity=4)
 G.add_edge(3,4,weight=(breakpoints,slopes_cheap),capacity=4)
-#print pf.convex_flow_function((1,2),breakpoints,slopes,3)
 NG = pf.graph_transformation(G)
-#print pf.feasible_flow(NG,1,4,2)
 flows = pf.negative_cycle_cancelling(G,NG,1,4,4)
 print pf.convert_flows(flows)
 }'''
 
-G = nx.DiGraph()
-G.add_node(1,demand=-3)
+d = 3
+c = 3
+w = pf.generate_cost(d)
+
+G = nx.Graph()
+G.add_node(1,demand=-d)
 G.add_node(2)
 G.add_node(3)
 G.add_node(4)
 G.add_node(5)
 G.add_node(6)
 G.add_node(7)
-G.add_node(8,demand=3)
+G.add_node(8,demand=d)
 
-slopes,breakpoints = pf.generate_cost(3)
 
-G.add_edge(1,2,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(1,2,weight=w,capacity=c)
 
-G.add_edge(1,5,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(1,5,weight=w,capacity=c)
 
-G.add_edge(2,3,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(2,3,weight=w,capacity=c)
 
-G.add_edge(3,4,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(3,4,weight=w,capacity=c)
 
-G.add_edge(5,4,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(5,4,weight=w,capacity=c)
 
-G.add_edge(4,6,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(4,6,weight=w,capacity=c)
 
-G.add_edge(4,8,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(4,8,weight=w,capacity=c)
 
-G.add_edge(5,6,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(5,6,weight=w,capacity=c)
 
-G.add_edge(6,7,weight=(breakpoints,slopes),capacity=3)
+G.add_edge(6,7,weight=w,capacity=c)
 
-G.add_edge(7,8,weight=(breakpoints,slopes),capacity=3)
-
-NG = pf.graph_transformation(G)
-flows = pf.negative_cycle_cancelling(G,NG,1,8,3)
-print pf.convert_flows(flows)
+G.add_edge(7,8,weight=w,capacity=c)
+B = G.to_undirected()
+#
+DG = pf.to_directed(B,1,8,w,c)
+NG = pf.graph_transformation(DG)
+flows = pf.negative_cycle_cancelling(G,NG,1,8,d)
+f = pf.convert_flows(flows)
+print pf.get_paths(f,1,8)

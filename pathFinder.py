@@ -38,21 +38,22 @@ def get_paths(previous,src,dst):
             current = src
     return paths
 
+
 ''' From undirected graph to undirected'''
-def to_directed(G,src,dst,n):
-    DG = nx.DiGraph()
-    for node in G.nodes():
-        if node == src:
-            DG.add_node(node,demand=-n)
-        elif node == dst:
-            DG.add_node(node,demand=n)
+def to_directed(G,src,dst,w,c):
+    def _to_directed(G,dst,marked,cur,anc,DG,w,c):
+        if cur == dst:
+            DG.add_edge(anc,cur,weight=w,capacity=c)
         else:
-            DG.add_node(node)
-        for neighbor in G.neighbors(node):
-            if type(neighbor) == int:
-                c = G[node][neighbor]['capacity']
-                w = G[node][neighbor]['weight']
-                DG.add_edge(node,neighbor,capacity=c,weight=w)
+             for n in G.neighbors(cur):
+                if n not in marked:
+                    DG.add_edge(cur,n,weight=w,capacity=c)
+                    marked.add(n)
+                    _to_directed(G,dst,marked,n,cur,DG,w,c)
+                    marked.remove(n)
+    marked = set([src])
+    DG = nx.DiGraph()
+    _to_directed(G,dst,marked,src,-1,DG,w,c)
     return DG
 
 ''' Find n maximally disjoint paths'''
@@ -82,8 +83,6 @@ def min_n_paths(G,src,dst,n):
 
 ''' Display edges of the graph G'''
 def display_graph(G):
-    #for edge in G.edges():
-    #    print "%s w:%s c:%s" % (edge,G[edge[0]][edge[1]]['weight'],G[edge[0]][edge[1]]['capacity'])
     for edge in G.edges_iter(data=True):
         print edge
     print "\n"
@@ -104,7 +103,6 @@ def increase_capacity(G,min_cut,k):
 
 ''' Create a subgraph by removing node from nodes in G '''
 def create_subgraph(G,nodes):
-    #new_graph = nx.Graph(G)
     new_graph = G.copy()
     new_graph.remove_nodes_from(nodes)
     return new_graph
@@ -348,7 +346,10 @@ def build_convex_residual_graph(G,NG,flows):
                     NG.remove_edge(u,v,key=e)
                     if not NG.has_edge(v,u,key=e):
                         NG.add_edge(v,u,key=e,weight= -w,capacity=c)
+                    else:
+                        NG[v][u][e]['weight']=-w
 
+''' Detect if there is a negative edge cycle (Bellman Ford)'''
 def negative_edge_cycle(G,s,distances,pred):
     for node in G.nodes_iter():
         if node == s:
@@ -373,14 +374,28 @@ def negative_edge_cycle(G,s,distances,pred):
                     return True
     return False
 
+''' Check a node is already present in the cycle to make'''
 def node_in_cycle(node,cycle):
-    for n in cycle:
-        if n[0] == node[0]:
+    for i in range(len(cycle)):
+        if cycle[i][0] == node[0]:
+            cycle[i] = node
+            del cycle[i+1:] 
             return True
     return False
 
 ''' Get negative cycle from predecessor graph'''
 def get_cycle(G,pred,distances,s,t):
+    #TODO check if s is connected to t
+    current = distances['start']
+    cycle = []
+    while True:
+        p = pred[current]
+        if node_in_cycle(p,cycle):
+            return cycle
+        cycle.insert(0,p)
+        #current_cost+= G[p[0]][current][p[1]]['weight']
+        current = p[0]
+    '''
     # Go from the ancestor for which the distance has changed 
     current = t
     cycle = []
@@ -401,7 +416,7 @@ def get_cycle(G,pred,distances,s,t):
             cycle.insert(0,p)
             current_cost += G[p[0]][current][p[1]]['weight']
             current = p[0]
-
+    '''
     return cycle 
 
 def node_flow(G,n,flows,out=True):
@@ -468,13 +483,10 @@ def negative_cycle_cancelling(G,NG,s,t,d):
     residual = NG.copy()  
     build_convex_residual_graph(G,residual,flows)
     distances = {}
+    display_graph(residual)
     pred = {}
     while negative_edge_cycle(residual,s,distances,pred):
-        #print "Flows:%s\n"%flows
-        #display_graph(residual)
-        print pred
         cycle = get_cycle(residual,pred,distances,s,t)
-        print cycle
         cap = get_cycle_capacity(residual,cycle)
         augment_flow_along_cycle(residual,flows,cycle,cap)
         #FIXME create new graph while changing edge instead of copying
@@ -499,6 +511,6 @@ def convert_flows(flows):
     return f
 
 def generate_cost(n):
-    slopes = range(1,n+1)
-    breakpoints = range(n+1)
-    return (slopes,breakpoints) 
+    slopes = [x*x for x in range(1,n+1)]
+    breakpoints = [x for x in range(n+1)]
+    return (breakpoints,slopes) 
