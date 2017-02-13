@@ -483,7 +483,6 @@ def negative_cycle_cancelling(G,NG,s,t,d):
     residual = NG.copy()  
     build_convex_residual_graph(G,residual,flows)
     distances = {}
-    display_graph(residual)
     pred = {}
     while negative_edge_cycle(residual,s,distances,pred):
         cycle = get_cycle(residual,pred,distances,s,t)
