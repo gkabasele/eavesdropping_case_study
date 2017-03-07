@@ -39,7 +39,7 @@ def get_paths(previous,src,dst):
     return paths
 
 
-''' From undirected graph to undirected'''
+''' From undirected graph to directed'''
 def to_directed(G,src,dst,w,c):
     def _to_directed(G,dst,marked,cur,anc,DG,w,c):
         if cur == dst:
