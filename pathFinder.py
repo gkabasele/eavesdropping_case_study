@@ -83,9 +83,8 @@ def min_n_paths(G,src,dst,n):
 
 ''' Display edges of the graph G'''
 def display_graph(G):
-    for edge in G.edges_iter(data=True):
+    for edge in G.edges_iter(data=True,keys=True):
         print edge
-    print "\n"
 
 ''' Increase cost of edge already used'''
 def increase_cost(G,paths):
@@ -233,7 +232,8 @@ def convex_flow_function(edge,breakpoints,slopes,flow):
     return cost
    
 ''' edge = {capacity:int, weight : (breakpoints,slopes)}'''
-def graph_transformation(G):
+#cap is used to have diffent id when algo will reverse the edge
+def graph_transformation(G,cap):
     NG = nx.MultiDiGraph()
     NG.add_nodes_from(G.nodes())
     for e in G.edges_iter(data='weight'):
@@ -242,7 +242,10 @@ def graph_transformation(G):
         for i in range(len(breakpoints)-1):
             new_weight = slopes[i]      
             new_capacity = breakpoints[i+1]-breakpoints[i]
-            NG.add_edge(e[0],e[1],weight=new_weight,capacity=new_capacity)
+            if not NG.has_edge(e[1],e[0],key=i):
+                NG.add_edge(e[0],e[1],weight=new_weight,capacity=new_capacity)
+            else:
+                NG.add_edge(e[0],e[1],key=cap+i,weight=new_weight,capacity=new_capacity)
     return NG
 
 def build_residual_graph(G,flows=None):
