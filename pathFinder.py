@@ -235,7 +235,7 @@ def convex_flow_function(edge,breakpoints,slopes,flow):
 #cap is used to have diffent id when algo will reverse the edge
 def graph_transformation(G,cap):
     NG = nx.MultiDiGraph()
-    NG.add_nodes_from(G.nodes())
+    NG.add_nodes_from(G.nodes(data=True))
     for e in G.edges_iter(data='weight'):
         # e (node,node,(breakpoints,slopes))
         breakpoints,slopes= e[2]
@@ -481,6 +481,14 @@ def augment_flow_along_cycle(G,flows,cycle,cap):
 
 
 ''' G is the original graph, NG is the transformed graph'''
+''' k is the number of demanded paths,k^2 is the maximum cost
+    m is the number of edge
+    n is the number of node
+    The objective function is bounded by mk^3 . Any cycle cancelling decreases
+    the objective function by a strictly positive amount. Since all data are integral
+    the algorithm terminates within(mk^3) iterations. The Bellman Ford is (nm) to 
+    identify negative cycle so complexity is O(nm^2k^3)
+'''
 def negative_cycle_cancelling(G,NG,s,t,d):
     flows = feasible_flow(NG,s,t,d)
     residual = NG.copy()  
@@ -497,6 +505,10 @@ def negative_cycle_cancelling(G,NG,s,t,d):
         distances = {}
         pred = {}
 
+    return flows
+
+def capacity_scaling(NG):
+    flowCost,flows = nx.capacity_scaling(NG)
     return flows
 
 ''' Convert flows for convex cost function graph to original graph'''

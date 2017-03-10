@@ -225,10 +225,9 @@ G.add_edge(7,6,weight=w,capacity=c)
 G.add_edge(7,8,weight=w,capacity=c)
 G.add_edge(8,7,weight=w,capacity=c)
 
-#B = G.to_undirected()
-
-#DG = pf.to_directed(B,1,8,w,c)
 NG = pf.graph_transformation(G,c)
+
+#flows = pf.capacity_scaling(NG)
 flows = pf.negative_cycle_cancelling(G,NG,1,8,d)
 f = pf.convert_flows(flows)
 print pf.get_paths(f,1,8)
