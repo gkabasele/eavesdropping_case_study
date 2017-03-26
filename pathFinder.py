@@ -81,17 +81,35 @@ def min_n_paths(G,src,dst,n):
                 return paths
         return paths 
 
+
+''' Naive approach to find maximally disjoint path'''
+def shortest_path_disjoint(G,src,dst,n):
+    paths = []
+    CG = G.copy()
+    for i in range(n):
+        display_graph(CG)
+        print "\n"
+        path = nx.shortest_path(CG,source=src,target=dst)
+        paths.append(path)
+        increase_cost(CG,path)
+    return paths
+
 ''' Display edges of the graph G'''
 def display_graph(G):
-    for edge in G.edges_iter(data=True,keys=True):
+    for edge in G.edges_iter(data=True):
         print edge
 
-''' Increase cost of edge already used'''
+''' Increase cost of edge already used
 def increase_cost(G,paths):
     for path in paths:
         for i in range(len(path)-1):
-            G[path[i]][path[i+1]]['weight'] += 1
-        
+            G[path[i]][path[i+1]]['weight'] += 10
+'''
+
+def increase_cost(G,path):
+    for i in range(len(path)-1):
+        G[path[i]][path[i+1]]['weight'] +=10
+
 ''' Increase capacity on edge in minimum edge cut'''
 def increase_capacity(G,min_cut,k):
     for edge in min_cut:

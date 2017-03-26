@@ -109,35 +109,44 @@ print pf.min_n_paths(N,1,9,3)
 }'''
 
 
+d = 3
+c = 3
+w = pf.generate_cost(d)
 
-'''{
-Test on random generate graph
 
 s = 20
 t = 21
 def generate_random_graph(src,dst):
-    random_graph = nx.random_geometric_graph(s,0.3)
-    for edge in random_graph.edges():
-        random_graph[edge[0]][edge[1]]['capacity']=1
-        random_graph[edge[0]][edge[1]]['weight']=1
-    random_graph.add_node(s,demand=-3)
-    random_graph.add_node(t,demand=3)
-    for i in range(2):
-        random_graph.add_edge(s,i,weight=1,capacity=1)
-        random_graph.add_edge(t,(s-1)-i,weight=1,capacity=1)
-    pf.display_graph(random_graph)
-    return random_graph
+    random = nx.random_geometric_graph(s,0.3)
+    for edge in random.edges():
+        random.add_edge(edge[0],edge[1],weight = 1)
 
-random_graph = generate_random_graph(s,t)
-print "Number edges:%s"%len(random_graph.edges())
-directed = pf.to_directed(random_graph,s,t,3)
-nx.draw_networkx(random_graph,with_labels=True)
-#cProfile.run('print pf.min_n_paths(directed,s,t,3)')
-print pf.min_n_paths(directed,s,t,3)
+    random_graph = random.to_directed()
+    for edge in random_graph.edges():
+        random_graph[edge[0]][edge[1]]['capacity']=c
+        random_graph[edge[0]][edge[1]]['weight']=w
+    random_graph.add_node(s,demand=-d)
+    random_graph.add_node(t,demand=d)
+    for i in range(2):
+        random_graph.add_edge(s,i,weight=w,capacity=c)
+        random_graph.add_edge(i,s,weight=w,capacity=c)
+        random_graph.add_edge(t,(s-1)-i,weight=w,capacity=c)
+        random_graph.add_edge((s-1)-i,t,weight=w,capacity=c)
+        random.add_edge(s,i,weight=1)
+        random.add_edge(t,(s-1)-i,weight=1)
+    return random_graph,random
+
+random_graph,random = generate_random_graph(s,t)
+print "Number edges:%s"%len(random.edges())
+NG = pf.graph_transformation(random_graph,c)
+nx.draw_networkx(NG,with_labels=True)
+flows = pf.capacity_scaling(NG)
+f = pf.convert_flows(flows)
+print pf.get_paths(f,20,21)
+print pf.shortest_path_disjoint(random,s,t,3)
 plt.show()
 
-#cProfile.run('print pf.min_n_paths(G,1,8,3)')
-}'''
+
 '''{
 # Negative Cycle Detection
 G = nx.MultiDiGraph()
@@ -180,6 +189,7 @@ flows = pf.negative_cycle_cancelling(G,NG,1,4,4)
 print pf.convert_flows(flows)
 }'''
 
+'''{
 d = 3
 c = 3
 w = pf.generate_cost(d)
@@ -231,3 +241,4 @@ NG = pf.graph_transformation(G,c)
 flows = pf.negative_cycle_cancelling(G,NG,1,8,d)
 f = pf.convert_flows(flows)
 print pf.get_paths(f,1,8)
+}'''
