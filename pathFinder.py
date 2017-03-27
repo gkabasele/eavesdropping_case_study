@@ -118,10 +118,16 @@ def edge_usage(G,paths,k):
     edges = {}
     for path in paths:
         for i in range(0,len(path)-1):
-            if (path[i],path[i+1]) in edges or (path[i+1],path[i]) in edges:
-                    edges[(path[i],path[i+1])]+=1
+            if path[i] > path[i+1]:
+                if (path[i],path[i+1]) not in edges:
+                    edges[(path[i],path[i+1])] = 1 
+                else:
+                    edges[(path[i],path[i+1])] += 1
             else:
-                edges[(path[i],path[i+1])] = 1 
+                if (path[i+1],path[i]) not in edges:
+                    edges[(path[i+1],path[i])] = 1
+                else:
+                    edges[(path[i+1],path[i])] += 1
     seq = range(1,k+1)
     usage = dict.fromkeys(seq,0)
     for e in edges:

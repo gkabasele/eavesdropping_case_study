@@ -138,8 +138,7 @@ def generate_random_graph(src,dst):
     return random_graph,random
 
 
-
-fn = open('results/table2.txt','a+')
+fn = open('results/table3.txt','a+')
 for i in range(50):
     try:
         random_graph,random = generate_random_graph(s,t)
@@ -151,17 +150,14 @@ for i in range(50):
         f = pf.convert_flows(flows)
         f_ng = pf.convert_flows(flows)
         cp = pf.get_paths(f,s,t)
-        ncp = pf.get_paths(f_ng,s,t)
         sp =  pf.shortest_path_disjoint(random,s,t,d)
         fn.write("\n-----------------------------------------\n")
         nx.write_edgelist(random,fn,data=True)
         fn.write("%s\n"%(sorted(cp,key= lambda x: pf.cost_path(random,x))))
         fn.write("%s\n"%(sorted(sp,key= lambda x: pf.cost_path(random,x))))
-        fn.write("%s\n"%(sorted(ncp,key= lambda x: pf.cost_path(random,x))))
         cp_sum = sum(pf.cost_path(random,x) for x in cp)
         sp_sum = sum(pf.cost_path(random,x) for x in sp)
-        ncp_sum = sum(pf.cost_path(random,x) for x in ncp)
-        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,sp),sp_sum],["Negative CC",len(ncp),pf.common_edge(random,ncp),pf.edge_usage(random,ncp,d),pf.longest_path_cost(random,ncp),ncp_sum]]
+        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,sp,d),pf.longest_path_cost(random,sp),sp_sum]]
         heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Cost longest path","Sum All path cost"]
         fn.write(tabulate(table,headers=heading))
         #plt.show()
@@ -264,5 +260,6 @@ NG = pf.graph_transformation(G,c)
 #flows = pf.capacity_scaling(NG)
 flows = pf.negative_cycle_cancelling(G,NG,1,8,d)
 f = pf.convert_flows(flows)
-print pf.get_paths(f,1,8)
+cp = pf.get_paths(f,1,8)
+print pf.edge_usage(G,cp,d)
 }'''
