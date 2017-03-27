@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pathFinder as pf
 import cProfile
+from tabulate import tabulate
 
 '''{
 Test on different graph  to compute several paths  
@@ -109,15 +110,15 @@ print pf.min_n_paths(N,1,9,3)
 }'''
 
 
-d = 3
-c = 3
+d = 4
+c = d
 w = pf.generate_cost(d)
 
 
-s = 20
-t = 21
+s = 60
+t = 61
 def generate_random_graph(src,dst):
-    random = nx.random_geometric_graph(s,0.3)
+    random = nx.random_geometric_graph(s,0.14)
     for edge in random.edges():
         random.add_edge(edge[0],edge[1],weight = 1)
 
@@ -136,15 +137,38 @@ def generate_random_graph(src,dst):
         random.add_edge(t,(s-1)-i,weight=1)
     return random_graph,random
 
-random_graph,random = generate_random_graph(s,t)
-print "Number edges:%s"%len(random.edges())
-NG = pf.graph_transformation(random_graph,c)
-nx.draw_networkx(NG,with_labels=True)
-flows = pf.capacity_scaling(NG)
-f = pf.convert_flows(flows)
-print pf.get_paths(f,20,21)
-print pf.shortest_path_disjoint(random,s,t,3)
-plt.show()
+
+
+fn = open('results/table2.txt','a+')
+for i in range(50):
+    try:
+        random_graph,random = generate_random_graph(s,t)
+        print "Number edges:%s"%len(random.edges())
+        NG = pf.graph_transformation(random_graph,c)
+        #nx.draw_networkx(NG,with_labels=True)
+        flows = pf.capacity_scaling(NG)
+        flows_ng = pf.negative_cycle_cancelling(random_graph,NG,s,t,d)
+        f = pf.convert_flows(flows)
+        f_ng = pf.convert_flows(flows)
+        cp = pf.get_paths(f,s,t)
+        ncp = pf.get_paths(f_ng,s,t)
+        sp =  pf.shortest_path_disjoint(random,s,t,d)
+        fn.write("\n-----------------------------------------\n")
+        nx.write_edgelist(random,fn,data=True)
+        fn.write("%s\n"%(sorted(cp,key= lambda x: pf.cost_path(random,x))))
+        fn.write("%s\n"%(sorted(sp,key= lambda x: pf.cost_path(random,x))))
+        fn.write("%s\n"%(sorted(ncp,key= lambda x: pf.cost_path(random,x))))
+        cp_sum = sum(pf.cost_path(random,x) for x in cp)
+        sp_sum = sum(pf.cost_path(random,x) for x in sp)
+        ncp_sum = sum(pf.cost_path(random,x) for x in ncp)
+        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,sp),sp_sum],["Negative CC",len(ncp),pf.common_edge(random,ncp),pf.edge_usage(random,ncp,d),pf.longest_path_cost(random,ncp),ncp_sum]]
+        heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Cost longest path","Sum All path cost"]
+        fn.write(tabulate(table,headers=heading))
+        #plt.show()
+    except nx.exception.NetworkXUnfeasible:
+        print "No feasible solution"
+fn.close
+
 
 
 '''{

@@ -29,7 +29,7 @@ def get_paths(previous,src,dst):
             except IndexError:
                 print "Graph:%s,current:%s"%(previous,current)
                 return
-        path.append(current) 
+        path.append(current)
         if not finished:
             if path not in paths:
                 paths.append(path)
@@ -87,12 +87,46 @@ def shortest_path_disjoint(G,src,dst,n):
     paths = []
     CG = G.copy()
     for i in range(n):
-        display_graph(CG)
-        print "\n"
-        path = nx.shortest_path(CG,source=src,target=dst)
-        paths.append(path)
+        path = nx.shortest_path(CG,source=src,target=dst,weight='weight')
+        if path not in paths:
+            paths.append(path)
         increase_cost(CG,path)
     return paths
+
+def cost_path(G,path):
+    cost = 0
+    for i in range(0,len(path)-1):
+        cost += G.get_edge_data(path[i],path[i+1])['weight']
+    return cost
+
+def longest_path_cost(G,paths):
+    return len(max(paths,key=lambda x: cost_path(G,x)))
+
+def common_edge(G,paths):
+    edges = set()
+    common_edges = 0
+    for path in paths:
+        for i in range(0,len(path)-1):
+            if (path[i],path[i+1]) in edges:
+                common_edges += 1
+            else:
+                edges.add((path[i],path[i+1]))
+                edges.add((path[i+1],path[i]))
+    return common_edges
+
+def edge_usage(G,paths,k):
+    edges = {}
+    for path in paths:
+        for i in range(0,len(path)-1):
+            if (path[i],path[i+1]) in edges or (path[i+1],path[i]) in edges:
+                    edges[(path[i],path[i+1])]+=1
+            else:
+                edges[(path[i],path[i+1])] = 1 
+    seq = range(1,k+1)
+    usage = dict.fromkeys(seq,0)
+    for e in edges:
+        usage[edges[e]] += 1
+    return usage
 
 ''' Display edges of the graph G'''
 def display_graph(G):
@@ -543,6 +577,6 @@ def convert_flows(flows):
     return f
 
 def generate_cost(n):
-    slopes = [x*x for x in range(1,n+1)]
+    slopes = [x**2 for x in range(1,n+1)]
     breakpoints = [x for x in range(n+1)]
     return (breakpoints,slopes) 
