@@ -8,9 +8,13 @@ Scaling algorithm on a Convex flow problem.
 
 ### Plot graphs
 You will find the results in the directory of the same name.
-	*comparison.txt contains several graphs and the results of the comparison between the Capacity Scaling algorithm and a Iterative Shortest Path algorithm
-	*graphs.txt contains only the graphs. If you wish to plot one of them, you can use the readGraph python script:
-	```shell
-	python readGraph.py <nbr_graph>
-	```
-	Where <nbr_graph> is the number of the graph
+
+* comparison.txt contains several graphs and the results of the comparison between the Capacity Scaling algorithm and a Iterative Shortest Path algorithm.
+
+* graphs.txt contains only the graphs. If you wish to plot one of them, you can use the readGraph python script:
+	
+```shell
+python readGraph.py <nbr_graph>
+```
+	
+Where <nbr_graph> is the number of the graph
