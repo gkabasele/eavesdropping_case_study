@@ -139,7 +139,7 @@ def generate_random_graph(src,dst):
 
 
 fn = open('results/table3.txt','a+')
-for i in range(50):
+for i in range(100):
     try:
         random_graph,random = generate_random_graph(s,t)
         print "Number edges:%s"%len(random.edges())
