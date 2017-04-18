@@ -100,7 +100,8 @@ def cost_path(G,path):
     return cost
 
 def longest_path_cost(G,paths):
-    return len(max(paths,key=lambda x: cost_path(G,x)))
+    longest_path = max(paths,key=lambda x: cost_path(G,x))
+    return cost_path(G,longest_path)
 
 def common_edge(G,paths):
     edges = set()
