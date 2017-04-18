@@ -149,7 +149,7 @@ def increase_cost(G,paths):
 
 def increase_cost(G,path):
     for i in range(len(path)-1):
-        G[path[i]][path[i+1]]['weight'] *=10
+        G[path[i]][path[i+1]]['weight'] +=10
 
 ''' Increase capacity on edge in minimum edge cut'''
 def increase_capacity(G,min_cut,k):

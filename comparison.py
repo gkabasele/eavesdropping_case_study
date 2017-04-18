@@ -13,10 +13,18 @@ def packet_exposure(paths,G):
                 edges[(path[i+1],path[i])] +=1
             else:
                 edges[(path[i],path[i+1])] +=1
-    for edge in edges:
-        print "%s:%s"%(edge,edges[edge])
+    number_edge = len(G.edges())
 
+    acc = 0
+    for edge in edges:
+        acc += (edges[edge] * (100/len(paths)))
+    avg = float(acc)/number_edge
+    upper = max(edges.values())
+    lower = min(edges.values())
+    print avg
     print "\n"
+
+
  
 
 
@@ -108,12 +116,15 @@ for i in range(1,6):
     cp = pf.get_paths(f,src,dst)
     sp = pf.shortest_path_disjoint(N,src,dst,i)
 
+
     print "%s\n"%(sorted(cp,key= lambda x: pf.cost_path(N,x)))
     print "%s\n"%(sorted(sp,key= lambda x: pf.cost_path(N,x)))
     cp_sum = sum(pf.cost_path(N,x) for x in cp)
+    cp_avg = float(cp_sum)/d
     sp_sum = sum(pf.cost_path(N,x) for x in sp)
-    table = [["Capacity Scaling",len(cp),pf.common_edge(N,cp),pf.edge_usage(N,cp,d),pf.longest_path_cost(N,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(N,sp),pf.edge_usage(N,sp,d),pf.longest_path_cost(N,sp),sp_sum]]
-    heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Cost longest path","Sum All path cost"]
+    sp_avg = float(sp_sum)/d
+    table = [["Capacity Scaling",len(cp),pf.common_edge(N,cp),pf.edge_usage(N,cp,d),pf.longest_path_cost(N,cp),cp_sum,cp_avg],["Iterative Shortest Path",len(sp),pf.common_edge(N,sp),pf.edge_usage(N,sp,d),pf.longest_path_cost(N,sp),sp_sum,sp_avg]]
+    heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Cost longest path","Sum All path cost","Average"]
     print tabulate(table,headers=heading)
 
     print "\n-----------------------------------------\n"
