@@ -1,8 +1,10 @@
 # !/bin/python
+# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import networkx as nx
 import pathFinder as pf
 import cProfile
+import comparison as comp
 from tabulate import tabulate
 
 '''{
@@ -115,10 +117,11 @@ c = d
 w = pf.generate_cost(d)
 
 
-s = 60
-t = 61
+s = 70
+t = 71
 def generate_random_graph(src,dst):
-    random = nx.random_geometric_graph(s,0.14)
+    #random = nx.random_geometric_graph(s,0.14)
+    random = nx.random_geometric_graph(s,0.2)
     for edge in random.edges():
         random.add_edge(edge[0],edge[1],weight = 1)
 
@@ -128,7 +131,7 @@ def generate_random_graph(src,dst):
         random_graph[edge[0]][edge[1]]['weight']=w
     random_graph.add_node(s,demand=-d)
     random_graph.add_node(t,demand=d)
-    for i in range(2):
+    for i in range(3):
         random_graph.add_edge(s,i,weight=w,capacity=c)
         random_graph.add_edge(i,s,weight=w,capacity=c)
         random_graph.add_edge(t,(s-1)-i,weight=w,capacity=c)
@@ -138,11 +141,13 @@ def generate_random_graph(src,dst):
     return random_graph,random
 
 
-fn = open('results/table3.txt','a+')
+
+fn = open('results/table6.txt','a+')
+total_cp_avg = 0
+total_sp_avg = 0
 for i in range(100):
     try:
         random_graph,random = generate_random_graph(s,t)
-        print "Number edges:%s"%len(random.edges())
         NG = pf.graph_transformation(random_graph,c)
         #nx.draw_networkx(NG,with_labels=True)
         flows = pf.capacity_scaling(NG)
@@ -152,18 +157,24 @@ for i in range(100):
         cp = pf.get_paths(f,s,t)
         sp =  pf.shortest_path_disjoint(random,s,t,d)
         fn.write("\n-----------------------------------------\n")
+        fn.write("Graph n°%s #edges: %s\n"%((i+1),len(random.edges())))
         nx.write_edgelist(random,fn,data=True)
         fn.write("%s\n"%(sorted(cp,key= lambda x: pf.cost_path(random,x))))
         fn.write("%s\n"%(sorted(sp,key= lambda x: pf.cost_path(random,x))))
+        cp_avg = comp.packet_exposure(cp,random)
+        sp_avg = comp.packet_exposure(sp,random)
+        total_cp_avg += cp_avg
+        total_sp_avg += sp_avg
         cp_sum = sum(pf.cost_path(random,x) for x in cp)
         sp_sum = sum(pf.cost_path(random,x) for x in sp)
-        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,sp,d),pf.longest_path_cost(random,sp),sp_sum]]
-        heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Cost longest path","Sum All path cost"]
+        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),cp_avg,pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,sp,d),sp_avg,pf.longest_path_cost(random,sp),sp_sum]]
+        heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Exp Avg","Cost longest path","Sum All path cost"]
         fn.write(tabulate(table,headers=heading))
-        #plt.show()
     except nx.exception.NetworkXUnfeasible:
         print "No feasible solution"
 fn.close
+print "CP:%s"%total_cp_avg
+print "SP:%s"%total_sp_avg
 
 
 
