@@ -131,7 +131,7 @@ def generate_random_graph(src,dst):
         random_graph[edge[0]][edge[1]]['weight']=w
     random_graph.add_node(s,demand=-d)
     random_graph.add_node(t,demand=d)
-    for i in range(3):
+    for i in range(2):
         random_graph.add_edge(s,i,weight=w,capacity=c)
         random_graph.add_edge(i,s,weight=w,capacity=c)
         random_graph.add_edge(t,(s-1)-i,weight=w,capacity=c)
@@ -140,11 +140,31 @@ def generate_random_graph(src,dst):
         random.add_edge(t,(s-1)-i,weight=1)
     return random_graph,random
 
+def count_path(G,paths,count):
+    for path in paths:
+        if pf.cost_path(G,path) < 5:
+            count[0] += 1
+        elif pf.cost_path(G,path) >= 5 and pf.cost_path(G,path)< 10:
+            count[5] += 1
+        elif pf.cost_path(G,path) >= 10 and pf.cost_path(G,path)< 15:
+            count[10] += 1
+        elif pf.cost_path(G,path) >= 15 and pf.cost_path(G,path)< 20:
+            count[15] +=1
+        elif pf.cost_path(G,path) >=20:
+            counnt[20] +=1
+
+def total_edge_usage(edge_use,count):
+    for edge in edge_use:
+        count[edge] += edge_use[edge]
 
 
 fn = open('results/table6.txt','a+')
 total_cp_avg = 0
 total_sp_avg = 0
+cp_path_counter = {0:0,5:0,10:0,15:0,20:0}
+sp_path_counter = {0:0,5:0,10:0,15:0,20:0}
+cp_edge_counter = {1:0 ,2:0, 3:0, 4:0}
+sp_edge_counter = {1:0 ,2:0, 3:0, 4:0}
 for i in range(100):
     try:
         random_graph,random = generate_random_graph(s,t)
@@ -165,16 +185,27 @@ for i in range(100):
         sp_avg = comp.packet_exposure(sp,random)
         total_cp_avg += cp_avg
         total_sp_avg += sp_avg
+        cp_edge_use = pf.edge_usage(random,cp,d)
+        sp_edge_use = pf.edge_usage(random,sp,d)
         cp_sum = sum(pf.cost_path(random,x) for x in cp)
         sp_sum = sum(pf.cost_path(random,x) for x in sp)
-        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),pf.edge_usage(random,cp,d),cp_avg,pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),pf.edge_usage(random,sp,d),sp_avg,pf.longest_path_cost(random,sp),sp_sum]]
+
+        count_path(random,cp,cp_path_counter)
+        count_path(random,sp,sp_path_counter)
+
+        total_edge_usage(cp_edge_use,cp_edge_counter)
+        total_edge_usage(sp_edge_use,sp_edge_counter)
+
+
+        table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),cp_edge_use,cp_avg,pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),sp_edge_use,sp_avg,pf.longest_path_cost(random,sp),sp_sum]]
         heading = ["Algorithms","#Paths","#Common Edges","#Use Edge","Exp Avg","Cost longest path","Sum All path cost"]
         fn.write(tabulate(table,headers=heading))
     except nx.exception.NetworkXUnfeasible:
         print "No feasible solution"
 fn.close
-print "CP:%s"%total_cp_avg
-print "SP:%s"%total_sp_avg
+print "CP:%s SP:%s"%(total_cp_avg,total_sp_avg)
+print "CP Path:%s SP Path:%s"%(cp_path_counter,sp_path_counter)
+print "CP Edge:%s SP Edge:%s"%(cp_edge_counter,sp_edge_counter)
 
 
 
