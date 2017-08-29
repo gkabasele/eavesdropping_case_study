@@ -111,17 +111,19 @@ N.add_edge(8,9,weight=1,capacity=1)
 print pf.min_n_paths(N,1,9,3)
 }'''
 
-
-d = 4
+#4
+d = 7
 c = d
 w = pf.generate_cost(d)
 
 
-s = 70
-t = 71
+s = 120
+#s = 70
+#t = 71
+t = 121
 def generate_random_graph(src,dst):
     #random = nx.random_geometric_graph(s,0.14)
-    random = nx.random_geometric_graph(s,0.2)
+    random = nx.random_geometric_graph(s,0.14)
     for edge in random.edges():
         random.add_edge(edge[0],edge[1],weight = 1)
 
@@ -131,7 +133,7 @@ def generate_random_graph(src,dst):
         random_graph[edge[0]][edge[1]]['weight']=w
     random_graph.add_node(s,demand=-d)
     random_graph.add_node(t,demand=d)
-    for i in range(2):
+    for i in range(3):
         random_graph.add_edge(s,i,weight=w,capacity=c)
         random_graph.add_edge(i,s,weight=w,capacity=c)
         random_graph.add_edge(t,(s-1)-i,weight=w,capacity=c)
@@ -151,21 +153,31 @@ def count_path(G,paths,count):
         elif pf.cost_path(G,path) >= 15 and pf.cost_path(G,path)< 20:
             count[15] +=1
         elif pf.cost_path(G,path) >=20:
-            counnt[20] +=1
+            count[20] +=1
 
 def total_edge_usage(edge_use,count):
     for edge in edge_use:
         count[edge] += edge_use[edge]
 
+def variance_path(G,paths):
+    avg = sum(pf.cost_path(G,x) for x in paths)/len(paths)
+    var = sum((pf.cost_path(G,x)-avg)**2 for x in paths)/len(paths)
+    return var
 
-fn = open('results/table6.txt','a+')
+
+fn = open('results/table6.txt','w+')
 total_cp_avg = 0
 total_sp_avg = 0
 cp_path_counter = {0:0,5:0,10:0,15:0,20:0}
 sp_path_counter = {0:0,5:0,10:0,15:0,20:0}
-cp_edge_counter = {1:0 ,2:0, 3:0, 4:0}
-sp_edge_counter = {1:0 ,2:0, 3:0, 4:0}
-for i in range(100):
+cp_edge_counter = {1:0 ,2:0, 3:0, 4:0 ,5:0, 6:0, 7:0}
+sp_edge_counter = {1:0 ,2:0, 3:0, 4:0, 5:0, 6:0, 7:0}
+cp_difference = 0
+sp_difference = 0
+cp_var = 0
+sp_var = 0
+r = 100
+for i in range(r):
     try:
         random_graph,random = generate_random_graph(s,t)
         NG = pf.graph_transformation(random_graph,c)
@@ -195,6 +207,12 @@ for i in range(100):
 
         total_edge_usage(cp_edge_use,cp_edge_counter)
         total_edge_usage(sp_edge_use,sp_edge_counter)
+        sorted_cp = sorted(cp,key= lambda x: pf.cost_path(random,x))
+        sorted_sp = sorted(sp,key= lambda x: pf.cost_path(random,x))
+        cp_difference += len(sorted_cp[0])-len(sorted_cp[-1])
+        sp_difference += len(sorted_sp[0])-len(sorted_sp[-1])
+        cp_var += variance_path(random,cp)
+        sp_var += variance_path(random,sp)
 
 
         table = [["Capacity Scaling",len(cp),pf.common_edge(random,cp),cp_edge_use,cp_avg,pf.longest_path_cost(random,cp),cp_sum],["Iterative Shortest Path",len(sp),pf.common_edge(random,sp),sp_edge_use,sp_avg,pf.longest_path_cost(random,sp),sp_sum]]
@@ -203,9 +221,10 @@ for i in range(100):
     except nx.exception.NetworkXUnfeasible:
         print "No feasible solution"
 fn.close
-print "CP:%s SP:%s"%(total_cp_avg,total_sp_avg)
+print "CP:%s SP:%s"%(float(total_cp_avg)/r,float(total_sp_avg)/r)
 print "CP Path:%s SP Path:%s"%(cp_path_counter,sp_path_counter)
 print "CP Edge:%s SP Edge:%s"%(cp_edge_counter,sp_edge_counter)
+print "CP diff:%s %s SP Diff=%s %s"%(float(cp_difference)/r,float(cp_var)/r,float(sp_difference)/r,float(sp_var)/r)
 
 
 

@@ -99,5 +99,5 @@ if __name__=='__main__':
     
         print "\n-----------------------------------------\n"
     
-        packet_exposure(cp,N)
-        packet_exposure(sp,N)
+        print packet_exposure(cp,N)
+        print packet_exposure(sp,N)
